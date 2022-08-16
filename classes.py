@@ -65,7 +65,7 @@ class Unit(pygame.sprite.Sprite):
         self.damage = 0
         self.health = u.get('health', 0)
         self.reloading_time = u.get('reloading_time', 0)
-        self.image = pygame.image.load(u.get('image', {command: 'images\\no.png'})[command])
+        self.image = pygame.image.load(u.get('image', {command: 'images/no.png'})[command])
         self.speed_ = u.get('speed', 0)
         self.speed = 0
         self.group = group
@@ -103,6 +103,12 @@ class Unit(pygame.sprite.Sprite):
         if self.run_effect:
             self.time_go = time.time()
         self.need_update_properties = True
+        self.aura = u.get('aura', False)
+        self.aura_radius = u.get('aura_radius', 0)
+        self.aura_reloading_time = u.get('aura_rt', 0)
+        self.aura_damage = u.get('aura_damage', 0)
+        self.aura_time = time.time() + u.get('first_reload', self.aura_reloading_time)
+        
         group.add(self)
 
     def correct_flag(self, flag):
@@ -188,7 +194,7 @@ class Unit(pygame.sprite.Sprite):
                 self.atack_time = self.stunned + self.reloading_time
                 self.time_go = self.stunned
 
-                i = pygame.image.load('images\\stunned.png')
+                i = pygame.image.load('images/stunned.png')
                 r = i.get_rect(center=[self.rect.centerx, self.rect.top - 20])
                 self.screen.blit(i, r)
                 return False
@@ -203,6 +209,31 @@ class Unit(pygame.sprite.Sprite):
                 else:
                     self.speed = self.param['speed']
                     self.damage = self.param['damage']
+            if self.aura and self.aura_time < time.time():
+                self.aura_time = time.time() + self.aura_reloading_time
+                
+                surf = pygame.Surface([WIDTH, HEIGHT], pygame.SRCALPHA)
+                pygame.draw.circle(
+                    surf,
+                    tuple(self.command + (50,)),
+                    self.rect.center,
+                    self.aura_radius,
+                    2
+                )
+                self.screen.blit(surf, [0, 0])
+
+                targetable = [
+                    self.rect.centerx - self.aura_radius,
+                    self.rect.centery - self.aura_radius,
+                    self.aura_radius * 2,
+                    self.aura_radius * 2
+                ]
+                for x in self.group:
+                    if (
+                            x.command != self.command and
+                            pygame.Rect(targetable).colliderect(x)
+                    ):
+                        x.health -= self.aura_damage
             self.choose_target()
             self.auto_go()
             return True
@@ -361,7 +392,7 @@ class Vampire(Unit):
                         x.vampirism += self.vampirism
                         self.vampired.append(x)
 
-    def ondied(self):
+    def ondeath(self):
         for x in self.vampired:
             x.vampirism -= self.vampirism
 
@@ -434,7 +465,7 @@ class Car(Unit):
         self.param['speed'] -= minus
         self.param['run_speed'] -= minus
 
-    def ondied(self):
+    def ondeath(self):
         a = [20, -20, 10, -10, 0, -30, 30, -40, 40]
         for x in self.inside:
             x.rect.centerx = self.rect.centerx + random.choice(a)
@@ -476,7 +507,7 @@ class Witch(Unit):
 
                 self.spawn_time = time.time() + self.param['resurrect_time']
 
-    def ondied(self):
+    def ondeath(self):
         for x in range(self.param['number']):
             a = [20, -20]
             # noinspection PyUnusedLocal
@@ -561,7 +592,7 @@ class Wall(Unit):
         self.hill_radius = self.param['hill_radius']
         self.hill = self.param['hill']
 
-    def ondied(self):
+    def ondeath(self):
         targetable = [self.rect.centerx - self.hill_radius, self.rect.centery - self.hill_radius,
                       self.hill_radius * 2, self.hill_radius * 2]
         for x in self.group:
@@ -581,7 +612,7 @@ class Digger(Unit):
             # noinspection PyAttributeOutsideInit
             self.update = super().update
         spade_img = pygame.image.load(
-            f"images\\{'red' if RED == self.command else 'green'}_spade.png")
+            f"images/{'red' if RED == self.command else 'green'}_spade.png")
         spade_rect = spade_img.get_rect(
             center=[WIDTH // 2, HEIGHT // 2 - 100] if self.command == RED else [WIDTH // 2,
                                                                                 HEIGHT // 2 + 100])
@@ -590,7 +621,7 @@ class Digger(Unit):
 
 # noinspection PyPep8Naming
 class Cannon_wheels(Unit):  # ANC_CANNON_WHEELS #ANC_WHEELS
-    def ondied(self):
+    def ondeath(self):
         Cannon(self.screen, self.command, self.rect.center, self.group, False)
 
 
@@ -599,7 +630,7 @@ class Taran(Unit):  # ANC_TARAN
         super().__init__(screen, command, coords, group, sp_reversed)
         self.time_go = time.time()
 
-    def ondied(self):
+    def ondeath(self):
         for x in range(self.param['number']):
             Elite(
                 self.screen,
@@ -1556,7 +1587,7 @@ class Collector(Building):
 
 class Castle(Building):
     def destroyed(self):
-        self.image = pygame.image.load('images\\castle_destroy.png')
+        self.image = pygame.image.load('images/castle_destroy.png')
         self.damage = 0
         self.health = 0
 

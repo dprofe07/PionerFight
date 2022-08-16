@@ -4,6 +4,7 @@ import tkinter as tk
 import tkinter.ttk as ttk
 import sys
 import pickle
+import os
 
 # IMPORTS
 
@@ -25,6 +26,7 @@ from constants import (
     WAIT_BEFORE_START, LST_RED_KEYS, LST_GREEN_KEYS,
 )
 
+
 pygame.init()
 
 used = {
@@ -42,11 +44,11 @@ TIME_ADD_GREEN = 0
 GREEN_DECK = List()
 RED_DECK = List()
 
-AI_RED = True
+AI_RED = False
 AI_GREEN = False
 
 
-def key_analyse(command, number, only_create=False):
+def key_analyse(command, number, only_info=False):
     global used, GREEN_POINTS, RED_POINTS
 
     if command == RED:
@@ -74,7 +76,7 @@ def key_analyse(command, number, only_create=False):
     if not err:
         ShowError(spells, command, err.message)
         return err.message
-    if not only_create:
+    if not only_info:
         used[command_name][unit_name] = time.time() + unit_params.get('wait', 0)
         if command == GREEN:
             GREEN_POINTS -= unit_params.get('points', 0)
@@ -99,12 +101,12 @@ def key_analyse(command, number, only_create=False):
             group,
             spawner.reversed
         )
-    if not only_create:
+    if not only_info:
         un.create()
     return un
 
 
-@debug
+#@debug
 def check_units_in_deck_count(vars_):
     return sum(1 for i in vars_ if i.get())
 
@@ -127,14 +129,14 @@ def save(deck, vars_):
 
 
 def save_deck(vars_, num, cmd):
-    with open('decks\\' + cmd + num + '.deck', 'wb') as file:
+    with open('decks/' + cmd + num + '.deck', 'wb') as file:
         pickle.dump([x.get() for x in vars_], file)
 
 
 def use_deck(vars_, num, command, ok_button, window):
     num = str(num)
     try:
-        with open('decks\\' + command + num + '.deck', 'rb') as file:
+        with open('decks/' + command + num + '.deck', 'rb') as file:
             for num, x in enumerate(pickle.load(file)):
                 try:
                     vars_[num].set(x)
@@ -481,7 +483,7 @@ else:
     screen.fill(WHITE)
     screen.blit(BG, [200, 0, 800, 400])
     win = 'none'
-    caron = pygame.image.load('images\\winner.png')
+    caron = pygame.image.load('images/winner.png')
 
     group.update()
     group.draw(screen)

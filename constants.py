@@ -2,6 +2,7 @@
 import pygame
 import pygame.image
 import pygame.font
+import os
 
 pygame.font.init()
 
@@ -23,7 +24,7 @@ BLACK = (0, 0, 0)
 
 WIDTH = 1200
 HEIGHT = 400
-BG = pygame.image.load('images\\BG.jpg')
+BG = pygame.image.load('images/bg.jpg')
 
 font = pygame.font.Font(None, 20)
 health_font = pygame.font.Font(None, 20)
