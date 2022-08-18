@@ -10,11 +10,6 @@ from unit import UNITS, HELP
 from constants import RED, GREEN
 
 
-def call_two(f1, f2):
-    f1()
-    f2()
-
-
 def check_number(group):
     g = r = 0
     for x in group:
@@ -163,14 +158,12 @@ def n_maxes(n, lst: list, key=None):
     return res
 
 
-def can_create_unit(
-        group, num_for_check_group,
-        unit_params, unit, command, spells, spawner,
-        used, points
-):
+def can_create_unit(group, unit, spawner, used, points):
     unit_name = unit.__name__.lower()
+    unit_params = UNITS[unit_name]
+    command = spawner.command
     command_name = 'red' if command == RED else 'green'
-    if check_number(group)[num_for_check_group] >= 50:
+    if check_number(group)[0 if command == GREEN else 1] >= 50:
         return Error('Макс. кол-во воинов достигнуто')
     if not unit_params.get('reversed', 0) and spawner.reverse:
         return Error('Сначала выйдите из реверсированного режима')

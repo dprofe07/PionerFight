@@ -1,10 +1,11 @@
+import random
+
 import pygame
 import time
 import tkinter as tk
 import tkinter.ttk as ttk
 import sys
 import pickle
-import os
 
 # IMPORTS
 
@@ -13,7 +14,7 @@ from classes import (
     ALL_UNITS, Building, Spell,
     List, Castle, Tower,
     Collector, ShowError,
-    Spawn, UnitInfo, SpellInfo
+    Spawn, UnitInfo, SpellInfo, RandomUnit
 )
 from ai.ai_main import Ai, AI_MODULES
 from unit import UNITS
@@ -69,10 +70,7 @@ def key_analyse(command, number, only_info=False):
     unit_name = unit.__name__.lower()
     unit_params = UNITS[unit_name]
 
-    err = can_create_unit(
-        group, num_for_check_group, unit_params, unit,
-        command, spells, spawner, used, points
-    )
+    err = can_create_unit(group, unit, spawner, used, points)
     if not err:
         ShowError(spells, command, err.message)
         return err.message
@@ -90,7 +88,7 @@ def key_analyse(command, number, only_info=False):
             spells,
             group,
             command,
-            spawner.reversed
+            spawner.reverse
         )
     else:
         un = UnitInfo(
@@ -99,7 +97,7 @@ def key_analyse(command, number, only_info=False):
             command,
             spawner.rect.center,
             group,
-            spawner.reversed
+            spawner.reverse
         )
     if not only_info:
         un.create()
@@ -253,6 +251,9 @@ green_castle = Castle(screen, GREEN, [WIDTH - 260, HEIGHT // 2, 70, 70], group, 
 red_spawn = Spawn(spells, RED, [260, HEIGHT // 2, 70, 70])
 green_spawn = Spawn(spells, GREEN, [WIDTH - 260, HEIGHT // 2, 70, 70])
 
+red_random = RandomUnit(screen, spells, group, RED, False)
+green_random = RandomUnit(screen, spells, group, GREEN, False)
+
 rt1 = Tower(screen, RED, [360, 325, 70, 70], group, False)
 rt2 = Tower(screen, RED, [360, 75, 70, 70], group, False)
 
@@ -291,6 +292,16 @@ while not (red_castle.died or green_castle.died):
         )
         rect = text.get_rect(topleft=[25, 25 * y])
         screen.blit(text, rect)
+
+    text = font.render(
+        f'z - {UNITS[red_random.unit.__name__.lower()].get("name", "Штука")} '
+        f'({UNITS[red_random.unit.__name__.lower()]["points"]})',
+        1,
+        BLACK
+    )
+    rect = text.get_rect(topleft=[25, 275])
+    screen.blit(text, rect)
+
     for y, e in enumerate(GREEN_DECK):
         text = font.render(
             f'{(y if y < 9 else -1) + 1} - {UNITS[e.__name__.lower()].get("name", "Штука")} '
@@ -300,12 +311,22 @@ while not (red_castle.died or green_castle.died):
         )
         rect = text.get_rect(topleft=[1025, 25 * y])
         screen.blit(text, rect)
+
+    text = font.render(
+        f'/ - {UNITS[green_random.unit.__name__.lower()].get("name", "Штука")} '
+        f'({UNITS[green_random.unit.__name__.lower()]["points"]})',
+        1,
+        BLACK
+    )
+    rect = text.get_rect(topleft=[1025, 275])
+    screen.blit(text, rect)
+
     text = font.render('Кол-во воинов: ' + str(check_number(group)[1]), 1, BLACK)
-    rect = text.get_rect(topleft=[25, 275])
+    rect = text.get_rect(topleft=[25, 300])
     screen.blit(text, rect)
 
     text = font.render('Кол-во воинов: ' + str(check_number(group)[0]), 1, BLACK)
-    rect = text.get_rect(topleft=[1025, 275])
+    rect = text.get_rect(topleft=[1025, 300])
     screen.blit(text, rect)
 
     text = quest_mark_font.render(' ? ', True, [255, 255, 255], [0, 0, 0])
@@ -345,12 +366,11 @@ while not (red_castle.died or green_castle.died):
 
             if e.key == pygame.K_LALT:
                 for y in group:
-                    # noinspection PyUnresolvedReferences
                     if y.command == RED and not isinstance(y, Building):
                         y.retreat = not y.retreat
+
             if e.key == pygame.K_RALT:
                 for y in group:
-                    # noinspection PyUnresolvedReferences
                     if y.command == GREEN and not isinstance(y, Building):
                         y.retreat = not y.retreat
 
@@ -367,9 +387,20 @@ while not (red_castle.died or green_castle.died):
             if e.key == pygame.K_d:
                 red_spawn.right = True
 
+            if e.key == pygame.K_z and not red_spawn.reverse:
+                err = can_create_unit(group, red_random.unit, red_spawn, used, RED_POINTS)
+                if err:
+                    used['red'][red_random.unit.__name__.lower()] = time.time() + UNITS[red_random.unit.__name__.lower()].get('wait', 0)
+                    red_random.unit(screen, RED, [red_spawn.rect.centerx, red_spawn.rect.centery], group, False)
+                    red_random.time = 0
+
+                    RED_POINTS -= UNITS[red_random.unit.__name__.lower()].get('points', 0)
+                else:
+                    ShowError(spells, RED, err.message)
+
             if e.key == pygame.K_LSHIFT:
                 red_spawn.reverse = not red_spawn.reverse
-            # MOVING GREEN CASTLE
+            # MOVING GREEN SPAWNER
             if e.key == pygame.K_UP:
                 green_spawn.up = True
 
@@ -384,6 +415,18 @@ while not (red_castle.died or green_castle.died):
 
             if e.key == pygame.K_RSHIFT:
                 green_spawn.reverse = not green_spawn.reverse
+
+            if e.key == pygame.K_SLASH and not green_spawn.reverse:
+                err = can_create_unit(group, green_random.unit, green_spawn, used, GREEN_POINTS)
+                if err:
+                    used['green'][green_random.unit.__name__.lower()] = time.time() + UNITS[green_random.unit.__name__.lower()].get('wait', 0)
+
+                    green_random.unit(screen, GREEN, [green_spawn.rect.centerx, green_spawn.rect.centery], group, False)
+                    green_random.time = 0
+
+                    GREEN_POINTS -= UNITS[green_random.unit.__name__.lower()].get('points', 0)
+                else:
+                    ShowError(spells, GREEN, err.message)
 
         if e.type == pygame.KEYDOWN and e.key == pygame.K_p:
             pause = not pause
