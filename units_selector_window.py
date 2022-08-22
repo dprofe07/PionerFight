@@ -2,11 +2,10 @@ import pickle
 import sys
 from functools import partial
 
-from PyQt5.QtGui import QFont
-from PyQt5.QtWidgets import QLabel, QFrame, QWidget, QHBoxLayout, QVBoxLayout, QPushButton, QCheckBox
+from PyQt5.QtWidgets import QLabel,  QWidget, QHBoxLayout, QVBoxLayout, QPushButton, QCheckBox
 from PyQt5.QtCore import Qt
 
-from constants import RED, GREEN
+from constants import RED
 from unit import UNITS
 
 
@@ -27,22 +26,20 @@ class UnitsSelectorWindow(QWidget):
         self.setLayout(self.vbox)
 
         self.hbox_units = QHBoxLayout()
-        self.frames = [
-            QVBoxLayout(),
-            QVBoxLayout(),
-            QVBoxLayout(),
-            QVBoxLayout()
-        ]
+        self.vboxes_for_units = []
+        for i in range(len(self.units_list) // 10):
+            vbox = QVBoxLayout()
+            self.vboxes_for_units.append(vbox)
+            self.hbox_units.addLayout(vbox)
+
         self.check_boxes = []
         for i, unit in enumerate(units_list):
             chk_box = QCheckBox(UNITS[unit.params_name]['name'])
             chk_box.stateChanged.connect(self.update_interface_after_change)
             self.setStyleSheet("background-color: rgc(%d, %d, %d)" % self.gamer.color)
             self.check_boxes.append(chk_box)
-            self.frames[i * len(self.frames) // len(units_list)].addWidget(chk_box)
+            self.vboxes_for_units[i * len(self.vboxes_for_units) // len(units_list)].addWidget(chk_box)
 
-        for i in self.frames:
-            self.hbox_units.addLayout(i)
         self.vbox.addLayout(self.hbox_units)
 
         self.lbl_save_decks = QLabel("Сохранить колоды:")

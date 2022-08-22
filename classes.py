@@ -616,8 +616,7 @@ class Spawn(Spell):
                 self.rect.left = 200
                 self.left = 0
             if self.rect.right > WIDTH // 2:
-                self.rect.right = WIDTH // 2
-                self.right = 0
+                self.reverse = not self.reverse
             if self.rect.top < 0:
                 self.rect.top = 0
                 self.up = 0
@@ -629,8 +628,7 @@ class Spawn(Spell):
                 self.rect.right = WIDTH - 200
                 self.right = 0
             if self.rect.left < WIDTH // 2:
-                self.rect.left = WIDTH // 2
-                self.left = 0
+                self.reverse = not self.reverse
             if self.rect.top < 0:
                 self.rect.top = 0
                 self.up = 0

@@ -59,7 +59,7 @@ class CastleOrTowerInDanger(Module):
         if time > 25:
             return []
         self.wait_for_points(random.randint(5, 10) * 100)
-        ai.atack_started = False
+        ai.attack_started = False
         res = []
         for tower_or_castle in [ai.castle, ai.towers[0], ai.towers[1]]:
             castle_region = [
@@ -90,7 +90,7 @@ class CastleOrTowerDamaged(Module):
         if time > 25:
             return []
         self.wait_for_points(random.randint(5, 10) * 100)
-        ai.atack_started = False
+        ai.attack_started = False
         res = []
         for tower_or_castle, h_tmp, h_now in zip([ai.castle, ai.towers[0], ai.towers[1]], ai.tmp_healths, ai.healths):
             if h_tmp == h_now:
@@ -111,8 +111,8 @@ class Atack(Module):
             return False
         # noinspection PyRedundantParentheses
         return (
-            (ai.atack_started) or
-            (not any(i.triggered(ai, group_of_units, points) for i in ai.modules if i is not self))
+                (ai.attack_started) or
+                (not any(i.triggered(ai, group_of_units, points) for i in ai.modules if i is not self))
         )
 
     def make_move(self, ai, group_of_units, time=0):
@@ -120,19 +120,19 @@ class Atack(Module):
             return []
 
         ai.spawner.reversed = False
-        if ai.atack_started:
+        if ai.attack_started:
             print('Atack had started DAVNO')
-            if ai.atack_unit_count >= 5:
+            if ai.attack_unit_count >= 5:
                 print('Atack STOPED')
-                ai.atack_main_unit = None
-                ai.atack_started = False
-                ai.atack_unit_count = 0
+                ai.attack_main_unit = None
+                ai.attack_started = False
+                ai.attack_unit_count = 0
                 self.wait_for_points(random.randint(5, 20) * 100)
                 return []
             try:
-                ai.spawner.rect.center = ai.atack_main_unit.rect.center
+                ai.spawner.rect.center = ai.attack_main_unit.rect.center
             except AttributeError:
-                ai.atack_started = False
+                ai.attack_started = False
                 return []
             ai.spawner.rect.centerx += 30 * (int(ai.command == GREEN) * 2 - 1)
 
@@ -142,7 +142,7 @@ class Atack(Module):
                 if unit is None:
                     return []
             unit.on_create = lambda self: [
-                setattr(ai, 'atack_unit_count', ai.atack_unit_count + 1)
+                setattr(ai, 'atack_unit_count', ai.attack_unit_count + 1)
             ]
             return [unit]
         else:
@@ -155,11 +155,11 @@ class Atack(Module):
             def unit_on_create(a):
                 def on_death(b):
                     b.on_death(b)
-                    ai.atack_started = False
+                    ai.attack_started = False
 
-                ai.atack_started = True
-                ai.atack_main_unit = a.created
-                ai.atack_unit_count = 1
+                ai.attack_started = True
+                ai.attack_main_unit = a.created
+                ai.attack_unit_count = 1
                 print('Starting atack')
 
             unit.on_create = unit_on_create

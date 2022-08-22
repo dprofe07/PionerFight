@@ -1,6 +1,7 @@
 import time
 
-from classes import ALL_UNITS, List, ShowError
+from base_units import Spell
+from classes import ALL_UNITS, List, ShowError, UnitInfo, SpellInfo
 from unit import UNITS
 from constants import WAIT_BEFORE_START, START_POINTS, GREEN, RED
 from funcs import can_create_unit
@@ -68,6 +69,44 @@ class Gamer:
     def init_random_unit(self, random_unit):
         if self.random_unit is None:
             self.random_unit = random_unit
+
+    def key_analyse(self, number, screen, group, spells, only_info=False):
+        try:
+            unit = self.deck[number]
+        except IndexError:
+            return
+
+        unit_params = UNITS[unit.params_name]
+
+        err = can_create_unit(group, unit, self)
+        if not err:
+            ShowError(spells, self.color, err.message)
+            return err.message
+        if not only_info:
+            self.used[unit.params_name] = time.time() + unit_params.get('wait', 0)
+            self.points -= unit_params.get('points', 0)
+        if issubclass(unit, Spell):
+            # noinspection PyArgumentList
+            un = SpellInfo(
+                unit,
+                screen,
+                spells,
+                group,
+                self.color,
+                self.spawner.reverse
+            )
+        else:
+            un = UnitInfo(
+                unit,
+                screen,
+                self.color,
+                self.spawner.rect.center,
+                group,
+                self.spawner.reverse
+            )
+        if not only_info:
+            un.create()
+        return un
 
 
 green_gamer = Gamer(GREEN, 'зелёные', 'green')

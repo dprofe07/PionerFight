@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import QApplication
 
 # IMPORTS
 from base_units import Unit
-from funcs import delete_extra, help_, check_number, can_create_unit
+from funcs import delete_extra, help_, check_number
 from classes import (
     ALL_UNITS, Building, Spell,
     Castle, Tower,
@@ -21,6 +21,7 @@ from constants import (
     LST_RED_KEYS, LST_GREEN_KEYS,
 )
 from units_selector_window import UnitsSelectorWindow
+from modes_selector_window import ModesSelectorWindow
 from gamer import red_gamer, green_gamer
 
 
@@ -29,42 +30,6 @@ q_app = QApplication(sys.argv)
 
 AI_RED = False
 AI_GREEN = False
-
-
-def key_analyse(gamer, number, only_info=False):
-    unit = gamer.deck[number]
-
-    unit_params = UNITS[unit.params_name]
-
-    err = can_create_unit(group, unit, gamer)
-    if not err:
-        ShowError(spells, gamer.color, err.message)
-        return err.message
-    if not only_info:
-        gamer.used[unit.params_name] = time.time() + unit_params.get('wait', 0)
-        gamer.points -= unit_params.get('points', 0)
-    if issubclass(unit, Spell):
-        # noinspection PyArgumentList
-        un = SpellInfo(
-            unit,
-            screen,
-            spells,
-            group,
-            gamer.color,
-            gamer.spawner.reverse
-        )
-    else:
-        un = UnitInfo(
-            unit,
-            screen,
-            gamer.color,
-            gamer.spawner.rect.center,
-            group,
-            gamer.spawner.reverse
-        )
-    if not only_info:
-        un.create()
-    return un
 
 
 def test_all(gamer):
@@ -92,11 +57,19 @@ def test_all(gamer):
         un.create()
 
 
-if not AI_RED:
+modes_selector = ModesSelectorWindow(ALL_UNITS)
+q_app.exec_()
+ALL_UNITS = modes_selector.all_units
+use_random_unit = modes_selector.use_random_unit
+
+red_gamer.deck = modes_selector.result_deck[:]
+green_gamer.deck = modes_selector.result_deck[:]
+
+if not AI_RED and modes_selector.need_ask_decks:
     UnitsSelectorWindow(red_gamer, ALL_UNITS)
     q_app.exec_()
 
-if not AI_GREEN:
+if not AI_GREEN and modes_selector.need_ask_decks:
     UnitsSelectorWindow(green_gamer, ALL_UNITS)
     q_app.exec_()
 
@@ -124,14 +97,14 @@ green_gamer.init_castles(
     Tower(screen, GREEN, [840, 325, 70, 70], group, False),
     Tower(screen, GREEN, [840, 75, 70, 70], group, False)
 )
+if use_random_unit:
+    red_gamer.init_random_unit(
+        RandomUnit(screen, spells, group, RED, False)
+    )
 
-red_gamer.init_random_unit(
-    RandomUnit(screen, spells, group, RED, False)
-)
-
-green_gamer.init_random_unit(
-    RandomUnit(screen, spells, group, GREEN, False)
-)
+    green_gamer.init_random_unit(
+        RandomUnit(screen, spells, group, GREEN, False)
+    )
 
 pause = False
 
@@ -144,19 +117,20 @@ if AI_RED:
     modules = [
         i() for i in AI_MODULES
     ]
-    ais.append(Ai(red_gamer, key_analyse, modules))
+    ais.append(Ai(red_gamer, modules))
     RED_DECK = ais[-1].make_deck(ALL_UNITS)
 if AI_GREEN:
     modules = [
         i() for i in AI_MODULES
     ]
-    ais.append(Ai(green_gamer, key_analyse, modules))
+    ais.append(Ai(green_gamer, modules))
     GREEN_DECK = ais[-1].make_deck(ALL_UNITS)
 
 while not (red_gamer.castle.died or green_gamer.castle.died):
     for ai in ais:
         ai.make_move(group)
     screen.fill(WHITE)
+
     for y, e in enumerate(red_gamer.deck):
         text = font.render(
             f'{(y if y < 9 else -1) + 1} - {UNITS[e.params_name].get("name", "Штука")} '
@@ -166,17 +140,15 @@ while not (red_gamer.castle.died or green_gamer.castle.died):
         )
         rect = text.get_rect(topleft=[25, 25 * y])
         screen.blit(text, rect)
-
-    text = font.render(
-        f'z - {UNITS[red_gamer.random_unit.unit.params_name].get("name", "Штука")} '
-        f'({UNITS[red_gamer.random_unit.unit.params_name]["points"]})',
-        1,
-        BLACK
-    )
-    rect = text.get_rect(topleft=[25, 275])
-    screen.blit(text, rect)
-
-
+    if use_random_unit:
+        text = font.render(
+            f'z - {UNITS[red_gamer.random_unit.unit.params_name].get("name", "Штука")} '
+            f'({UNITS[red_gamer.random_unit.unit.params_name]["points"]})',
+            1,
+            BLACK
+        )
+        rect = text.get_rect(topleft=[25, 275])
+        screen.blit(text, rect)
 
     for y, e in enumerate(green_gamer.deck):
         text = font.render(
@@ -188,14 +160,15 @@ while not (red_gamer.castle.died or green_gamer.castle.died):
         rect = text.get_rect(topleft=[1025, 25 * y])
         screen.blit(text, rect)
 
-    text = font.render(
-        f'/ - {UNITS[green_gamer.random_unit.unit.params_name].get("name", "Штука")} '
-        f'({UNITS[green_gamer.random_unit.unit.params_name]["points"]})',
-        1,
-        BLACK
-    )
-    rect = text.get_rect(topleft=[1025, 275])
-    screen.blit(text, rect)
+    if use_random_unit:
+        text = font.render(
+            f'/ - {UNITS[green_gamer.random_unit.unit.params_name].get("name", "Штука")} '
+            f'({UNITS[green_gamer.random_unit.unit.params_name]["points"]})',
+            1,
+            BLACK
+        )
+        rect = text.get_rect(topleft=[1025, 275])
+        screen.blit(text, rect)
 
     text = font.render('Кол-во воинов: ' + str(check_number(group)[1]), 1, BLACK)
     rect = text.get_rect(topleft=[25, 300])
@@ -224,13 +197,13 @@ while not (red_gamer.castle.died or green_gamer.castle.died):
 
             for i in range(len(LST_RED_KEYS)):
                 if e.key == LST_RED_KEYS[i]:
-                    key_analyse(red_gamer, i)
+                    red_gamer.key_analyse(i, screen, group, spells)
 
             # GREEN Cards
 
             for i in range(len(LST_GREEN_KEYS)):
                 if e.key == LST_GREEN_KEYS[i]:
-                    key_analyse(green_gamer, i)
+                    green_gamer.key_analyse(i, screen, group, spells)
 
             # GIVING UP
             if e.key == pygame.K_KP_MINUS:
@@ -251,18 +224,15 @@ while not (red_gamer.castle.died or green_gamer.castle.died):
                         if y.command == GREEN and not isinstance(y, Building):
                             y.retreat = not y.retreat
 
-            red_gamer.handle_spawner_move(
+            red_gamer.handle_spawner_move(True, e.key, pygame.K_s, pygame.K_w, pygame.K_d, pygame.K_a)
+
+            green_gamer.handle_spawner_move(
                 True, e.key,
-                pygame.K_s, pygame.K_w, pygame.K_a, pygame.K_d
+                pygame.K_DOWN, pygame.K_UP, pygame.K_RIGHT, pygame.K_LEFT
             )
 
-            green_gamer.spawner.handle_spawner_move(
-                True, e.key,
-                pygame.K_UP, pygame.K_DOWN, pygame.K_RIGHT, pygame.K_LEFT
-            )
-
-            if e.key == pygame.K_z and not red_gamer.spawner.reverse:
-                red_gamer.handle_random_unit()
+            if e.key == pygame.K_z and not red_gamer.spawner.reverse and use_random_unit:
+                red_gamer.handle_random_unit(screen, group, spells)
 
             if e.key == pygame.K_LSHIFT:
                 red_gamer.spawner.reverse = not red_gamer.spawner.reverse
@@ -270,7 +240,7 @@ while not (red_gamer.castle.died or green_gamer.castle.died):
             if e.key == pygame.K_RSHIFT:
                 green_gamer.spawner.reverse = not green_gamer.spawner.reverse
 
-            if e.key == pygame.K_SLASH and not green_gamer.spawner.reverse:
+            if e.key == pygame.K_SLASH and not green_gamer.spawner.reverse and use_random_unit:
                 green_gamer.handle_random_unit(screen, group, spells)
 
         if e.type == pygame.KEYDOWN and e.key == pygame.K_p:

@@ -3,17 +3,16 @@ from unit import UNITS
 
 
 class Ai:
-    def __init__(self, gamer, key_analyse, modules):
+    def __init__(self, gamer, modules):
         self.gamer = gamer
         self.command = gamer.command
         self.modules = modules
         self.screen = self.gamer.spawner.screen
-        self.key_analyse = key_analyse
         self.deck = []
         self.tmp_healths = self.healths
-        self.atack_started = False
-        self.atack_main_unit = None
-        self.atack_unit_count = 0
+        self.attack_started = False
+        self.attack_main_unit = None
+        self.attack_unit_count = 0
 
     @property
     def healths(self):
