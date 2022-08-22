@@ -3,14 +3,12 @@ from unit import UNITS
 
 
 class Ai:
-    def __init__(self, castle, towers, key_analyse, spawner, modules):
-        self.command = castle.command
+    def __init__(self, gamer, key_analyse, modules):
+        self.gamer = gamer
+        self.command = gamer.command
         self.modules = modules
-        self.castle = castle
-        self.spawner = spawner
-        self.screen = self.spawner.screen
+        self.screen = self.gamer.spawner.screen
         self.key_analyse = key_analyse
-        self.towers = towers
         self.deck = []
         self.tmp_healths = self.healths
         self.atack_started = False
@@ -19,7 +17,7 @@ class Ai:
 
     @property
     def healths(self):
-        return self.castle.health, self.towers[0].health, self.towers[1].health
+        return self.gamer.castle.health, self.gamer.tower1.health, self.gamer.tower2.health
 
     def make_deck(self, units):
         units = units[:]
@@ -43,8 +41,8 @@ class Ai:
         except TypeError:
             return None
 
-    def make_move(self, group, points):
-        best_move = self.analyse(group, points)
+    def make_move(self, group):
+        best_move = self.analyse(group, self.gamer.points)
         if best_move is not None:
             for i in best_move:
                 i.create()

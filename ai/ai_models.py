@@ -1,6 +1,6 @@
 import random
 
-from constants import RED, GREEN
+from constants import GREEN
 from funcs import debug
 
 
@@ -18,7 +18,7 @@ class Module:
 
     # noinspection PyMethodMayBeStatic
     def select_unit(self, ai, number):
-        return ai.key_analyse(ai.command, number)
+        return ai.key_analyse(ai.gamer, number)
 
     def get_rnd_unit(self, ai, role=None, time=0):
         if time > 10:
@@ -133,7 +133,7 @@ class Atack(Module):
                 ai.spawner.rect.center = ai.atack_main_unit.rect.center
             except AttributeError:
                 ai.atack_started = False
-                return
+                return []
             ai.spawner.rect.centerx += 30 * (int(ai.command == GREEN) * 2 - 1)
 
             unit = self.get_rnd_unit(ai, 'support')
@@ -141,7 +141,7 @@ class Atack(Module):
                 unit = self.get_rnd_unit(ai, 'atack')
                 if unit is None:
                     return []
-            unit.oncreated = lambda self: [
+            unit.on_create = lambda self: [
                 setattr(ai, 'atack_unit_count', ai.atack_unit_count + 1)
             ]
             return [unit]
@@ -152,16 +152,17 @@ class Atack(Module):
             if unit is None:
                 return []
 
-            unit.oncreate = lambda self: [
-                setattr(ai, 'atack_started', True),
-                setattr(ai, 'atack_main_unit', self.created),
-                setattr(ai, 'atack_unit_count', 1),
-                setattr(unit, 'ondeath', lambda self: [
-                    (self.on_death if hasattr(self, 'ondeath') else lambda self: None)(self),
-                    setattr(ai, 'atack_started', False)
-                ]),
-                print('Starting atack'),
-            ]
+            def unit_on_create(a):
+                def on_death(b):
+                    b.on_death(b)
+                    ai.atack_started = False
+
+                ai.atack_started = True
+                ai.atack_main_unit = a.created
+                ai.atack_unit_count = 1
+                print('Starting atack')
+
+            unit.on_create = unit_on_create
 
             return [unit]
 

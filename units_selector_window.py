@@ -11,16 +11,15 @@ from unit import UNITS
 
 
 class UnitsSelectorWindow(QWidget):
-    def __init__(self, command, units_list, deck):
+    def __init__(self, gamer, units_list):
         super().__init__()
 
         self.success = False
-        self.deck = deck
+        self.gamer = gamer
         self.units_list = units_list
 
-        self.command = command
-        self.command_ru = 'красных' if command == RED else 'зелёных'
-        self.command_en = 'red' if command == RED else 'green'
+        self.command_ru = 'красных' if self.gamer.color == RED else 'зелёных'
+        self.command_en = self.gamer.en_name
 
         self.setWindowTitle(f'Выбор воинов для {self.command_ru}')
 
@@ -38,6 +37,7 @@ class UnitsSelectorWindow(QWidget):
         for i, unit in enumerate(units_list):
             chk_box = QCheckBox(UNITS[unit.params_name]['name'])
             chk_box.stateChanged.connect(self.update_interface_after_change)
+            self.setStyleSheet("background-color: rgc(%d, %d, %d)" % self.gamer.color)
             self.check_boxes.append(chk_box)
             self.frames[i * len(self.frames) // len(units_list)].addWidget(chk_box)
 
@@ -93,7 +93,7 @@ class UnitsSelectorWindow(QWidget):
     def on_ok_button_click(self):
         for i, chk_box in enumerate(self.check_boxes):
             if chk_box.checkState() == 2:
-                self.deck.append(self.units_list[i])
+                self.gamer.deck.append(self.units_list[i])
         self.success = True
         self.close()
 

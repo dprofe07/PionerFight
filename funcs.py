@@ -93,8 +93,8 @@ def help_():
     hw = tk.Tk()
     hw.title('Help')
     # noinspection PyDeprecation
-    # qw = tix.ScrolledWindow(hw, height="500")
     qw = ScrolledWindow(hw, height="500")
+    # qw = tix.ScrolledWindow(hw, height="500")
     qw.pack(side=tk.LEFT)
 
 
@@ -160,20 +160,19 @@ def n_maxes(n, lst: list, key=None):
     return res
 
 
-def can_create_unit(group, unit, spawner, used, points):
+def can_create_unit(group, unit, gamer):
     unit_name = unit.params_name
     unit_params = UNITS[unit_name]
-    command = spawner.command
-    command_name = 'red' if command == RED else 'green'
+    command = gamer.spawner.command
     if check_number(group)[0 if command == GREEN else 1] >= 50:
         return Error('Макс. кол-во воинов достигнуто')
-    if not unit_params.get('reversed', 0) and spawner.reverse:
+    if not unit_params.get('reversed', 0) and gamer.spawner.reverse:
         return Error('Сначала выйдите из реверсированного режима')
     if unit_params.get('max_count', 51) <= count_units(group, unit, command):
         return Error('Максимальное количество таких воинов достигнуто')
-    if unit_params.get('points', 0) > points:
+    if unit_params.get('points', 0) > gamer.points:
         return Error('Не хватает очков')
-    if used[command_name][unit_name] > time.time():
+    if gamer.used[unit_name] > time.time():
         return Error('Подождите немного')
     return True
 
