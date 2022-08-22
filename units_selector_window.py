@@ -27,7 +27,7 @@ class UnitsSelectorWindow(QWidget):
 
         self.hbox_units = QHBoxLayout()
         self.vboxes_for_units = []
-        for i in range(len(self.units_list) // 10):
+        for i in range(round(len(self.units_list) / 10)):
             vbox = QVBoxLayout()
             self.vboxes_for_units.append(vbox)
             self.hbox_units.addLayout(vbox)
@@ -78,7 +78,7 @@ class UnitsSelectorWindow(QWidget):
 
         self.update_interface_after_change()
 
-        self.setFixedSize(self.size())
+        self.setFixedSize(0, 0)
         self.show()
 
     def closeEvent(self, a0):

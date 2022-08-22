@@ -35,7 +35,7 @@ class ModesSelectorWindow(QWidget):
             btn.clicked.connect(partial(self.on_mode_click, mode_name))
             self.hboxes[i * len(self.hboxes) // len(list(self.modes.keys()))].addWidget(btn)
 
-        self.setFixedSize(self.size())
+        self.setFixedSize(0, 0)
         self.show()
 
     def init_modes(self):

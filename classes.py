@@ -582,11 +582,11 @@ class AttackBattery(Unit):
         super().attack(x, need_update_attack_time)
 
 
-#  ЫЫЫЫЫЫЫ   ЫЫЫЫЫЫ   ЫЫЫЫЫ  Ы      Ы       ЫЫЫЫЫЫ
+#   ЫЫЫЫЫЫ   ЫЫЫЫЫ    ЫЫЫЫЫ  Ы      Ы       ЫЫЫЫЫЫ
 #  Ы         Ы    Ы   Ы      Ы      Ы      Ы
-#  ЫЫЫЫЫЫЫ   ЫЫЫЫЫЫ   ЫЫЫ    Ы      Ы       ЫЫЫЫЫ
+#   ЫЫЫЫЫ    ЫЫЫЫЫ    ЫЫЫ    Ы      Ы       ЫЫЫЫЫ
 #        Ы   Ы        Ы      Ы      Ы            Ы
-#  ЫЫЫЫЫЫЫ   Ы        ЫЫЫЫЫ  ЫЫЫЫЫ  ЫЫЫЫЫ  ЫЫЫЫЫЫ
+#  ЫЫЫЫЫЫ    Ы        ЫЫЫЫЫ  ЫЫЫЫЫ  ЫЫЫЫЫ  ЫЫЫЫЫЫ
 
 
 class Spawn(Spell):
@@ -614,27 +614,29 @@ class Spawn(Spell):
         if (self.command == RED and not self.reverse) or (self.command == GREEN and self.reverse):
             if self.rect.left < 200:
                 self.rect.left = 200
-                self.left = 0
+                self.left = False
             if self.rect.right > WIDTH // 2:
+                self.rect.right = WIDTH // 2
                 self.reverse = not self.reverse
             if self.rect.top < 0:
                 self.rect.top = 0
-                self.up = 0
+                self.up = False
             if self.rect.bottom > HEIGHT:
                 self.rect.bottom = HEIGHT
-                self.down = 0
+                self.down = False
         elif (self.command == GREEN and not self.reverse) or (self.command == RED and self.reverse):
             if self.rect.right > WIDTH - 200:
                 self.rect.right = WIDTH - 200
-                self.right = 0
+                self.right = False
             if self.rect.left < WIDTH // 2:
+                self.rect.left = WIDTH // 2
                 self.reverse = not self.reverse
             if self.rect.top < 0:
                 self.rect.top = 0
-                self.up = 0
+                self.up = False
             if self.rect.bottom > HEIGHT:
                 self.rect.bottom = HEIGHT
-                self.down = 0
+                self.down = False
 
     @property
     def reverse(self):
@@ -1082,15 +1084,15 @@ class CannonSpell(Spell):
             rad = self.attack_radius
             time_ = self.attack_time
             rel_time = self.attack_reloading_time
-            cmd_eq_neq = lambda a, b: a != b
+            cmd_eq_neq = object.__ne__
         elif action == 'hill':
             f = self.hill_func
             rad = self.hill_radius
             time_ = self.hill_time
             rel_time = self.hill_reloading_time
-            cmd_eq_neq = lambda a, b: a == b
+            cmd_eq_neq = tuple.__eq__
         else:
-            raise ValueError(f'Incorrect action: {action}')
+            raise ValueError(f'Incorrect action: \"{action}\"')
 
         if time_ > time.time():
             return
