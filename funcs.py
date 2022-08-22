@@ -4,7 +4,6 @@ import math
 import time
 from tkinter import *
 import tkinter as tk
-from tkinter import tix
 
 from unit import UNITS, HELP
 from constants import RED, GREEN
@@ -94,14 +93,17 @@ def help_():
     hw = tk.Tk()
     hw.title('Help')
     # noinspection PyDeprecation
-    qw = tix.ScrolledWindow(hw, height="500")
-    qw.pack()
-    Label(qw.window, text="Описание воинов", font=('Arial', 20)).pack()
+    # qw = tix.ScrolledWindow(hw, height="500")
+    qw = ScrolledWindow(hw, height="500")
+    qw.pack(side=tk.LEFT)
+
+
+    Label(qw, text="Описание воинов", font=('Arial', 20)).pack()
 
     for k, v in HELP.items():
-        Label(qw.window, text='-' * 212).pack(anchor=W)
+        Label(qw, text='-' * 212).pack(anchor=W)
 
-        fr = Frame(qw.window)
+        fr = Frame(qw)
         fr.pack(anchor=W, fill=X)
 
         Label(fr, text=' ' + v, justify=LEFT).pack(side=LEFT)
@@ -109,20 +111,20 @@ def help_():
                   font=('Arial', 10, 'underline'))
         a.pack(side=RIGHT, anchor=E)
 
-        fr2 = Frame(qw.window)
+        fr2 = Frame(qw)
         fr2.pack(anchor=W)
 
         a.bind('<Button-1>', lambda x, k=k, f=fr2, p=a: else_(k, f, p))
-    Label(qw.window, text='=' * 132).pack(anchor=W)
-    Label(qw.window, text='Пояснения:', font=('Arial', 18)).pack()
-    Label(qw.window, text=' Вампиризм - воин восстанавливает себе '
+    Label(qw, text='=' * 132).pack(anchor=W)
+    Label(qw, text='Пояснения:', font=('Arial', 18)).pack()
+    Label(qw, text=' Вампиризм - воин восстанавливает себе '
                           'здоровье нанося урон противникам').pack(anchor=W)
-    Label(qw.window, text=' Разгон - эффект, при наличии которого воин '
+    Label(qw, text=' Разгон - эффект, при наличии которого воин '
                           'при непрерывном движении  некоторое кол-во времени, 1 раз увеличивает '
                           'себе скорость и урон.\nПри атаке разгон сбрасывается').pack(anchor=W)
-    Label(qw.window, text=' Сплеш-урон - урон наносится не 1 определённой цели, '
+    Label(qw, text=' Сплеш-урон - урон наносится не 1 определённой цели, '
                           'а всем целям в области.').pack(anchor=W)
-    Label(qw.window, text=' Эффект отравления - эффект, при наличии которого у цели, '
+    Label(qw, text=' Эффект отравления - эффект, при наличии которого у цели, '
                           'ей постоянно наносится небольшой урон. '
                           'ВНИМАНИЕ: Этот эффект постоянно активен у зданий.').pack(anchor=W)
     hw.mainloop()
@@ -159,7 +161,7 @@ def n_maxes(n, lst: list, key=None):
 
 
 def can_create_unit(group, unit, spawner, used, points):
-    unit_name = unit.__name__.lower()
+    unit_name = unit.params_name
     unit_params = UNITS[unit_name]
     command = spawner.command
     command_name = 'red' if command == RED else 'green'

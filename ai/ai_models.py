@@ -157,7 +157,7 @@ class Atack(Module):
                 setattr(ai, 'atack_main_unit', self.created),
                 setattr(ai, 'atack_unit_count', 1),
                 setattr(unit, 'ondeath', lambda self: [
-                    (self.ondeath if hasattr(self, 'ondeath') else lambda self: None)(self),
+                    (self.on_death if hasattr(self, 'ondeath') else lambda self: None)(self),
                     setattr(ai, 'atack_started', False)
                 ]),
                 print('Starting atack'),

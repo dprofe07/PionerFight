@@ -20,7 +20,7 @@ HEIGHT = 400
 BG = pygame.image.load('images\\BG.jpg')
 from unit import UNITS
 from classes import Unit, Soldat,Archer, Gigant, Hill, DoubleDamage, Meteor, Cannon, Spell, Tower, Sparky, Rocket, SoldatSpawner, Collector
-from classes import Castle, Molniy
+from classes import Castle, Lightning
 
 screen = pygame.display.set_mode([WIDTH, HEIGHT])
 pygame.display.set_caption('Пионерское побоище')

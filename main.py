@@ -1,15 +1,11 @@
-import random
-
 import pygame
 import time
-import tkinter as tk
-import tkinter.ttk as ttk
 import sys
-import pickle
+from PyQt5.QtWidgets import QApplication
 
 # IMPORTS
-
-from funcs import delete_extra, help_, check_number, can_create_unit, debug
+from base_units import Unit
+from funcs import delete_extra, help_, check_number, can_create_unit
 from classes import (
     ALL_UNITS, Building, Spell,
     List, Castle, Tower,
@@ -26,16 +22,23 @@ from constants import (
     START_POINTS, PAUSE_ADD_POINTS, ADD_POINTS, MAX_POINTS,
     WAIT_BEFORE_START, LST_RED_KEYS, LST_GREEN_KEYS,
 )
+from units_selector_window import UnitsSelectorWindow
 
 
 pygame.init()
+q_app = QApplication(sys.argv)
 
 used = {
-    'red': {k.__name__.lower(): v for k, v in zip(
-        ALL_UNITS,
-        [UNITS[x.__name__.lower()]['wait'] + time.time() + WAIT_BEFORE_START for x in ALL_UNITS])},
-    'green': {k.__name__.lower(): v for k, v in zip(ALL_UNITS, [
-        UNITS[x.__name__.lower()]['wait'] + time.time() + WAIT_BEFORE_START for x in ALL_UNITS])},
+    'red': {
+        k.params_name: v
+        for k, v in
+        zip(ALL_UNITS, [UNITS[x.params_name]['wait'] + time.time() + WAIT_BEFORE_START for x in ALL_UNITS])
+    },
+    'green': {
+        k.params_name: v
+        for k, v in
+        zip(ALL_UNITS, [UNITS[x.params_name]['wait'] + time.time() + WAIT_BEFORE_START for x in ALL_UNITS])
+    },
 }
 GREEN_POINTS = START_POINTS
 RED_POINTS = START_POINTS
@@ -57,25 +60,22 @@ def key_analyse(command, number, only_info=False):
         spawner = red_spawn
         command_name = 'red'
         points = RED_POINTS
-        num_for_check_group = 1
     elif command == GREEN:
         unit = GREEN_DECK[number]
         spawner = green_spawn
-        num_for_check_group = 0
         command_name = 'green'
         points = GREEN_POINTS
     else:
         raise ValueError('Command unknown')
 
-    unit_name = unit.__name__.lower()
-    unit_params = UNITS[unit_name]
+    unit_params = UNITS[unit.params_name]
 
     err = can_create_unit(group, unit, spawner, used, points)
     if not err:
         ShowError(spells, command, err.message)
         return err.message
     if not only_info:
-        used[command_name][unit_name] = time.time() + unit_params.get('wait', 0)
+        used[command_name][unit.params_name] = time.time() + unit_params.get('wait', 0)
         if command == GREEN:
             GREEN_POINTS -= unit_params.get('points', 0)
         else:
@@ -104,140 +104,45 @@ def key_analyse(command, number, only_info=False):
     return un
 
 
-#@debug
-def check_units_in_deck_count(vars_):
-    return sum(1 for i in vars_ if i.get())
-
-
-def update_interface_after_change(vars_, ok_button, window):
-    if check_units_in_deck_count(vars_):
-        ok_button['state'] = 'normal'
-        for i in window.children['!frame2'].children.values():
-            i['state'] = 'normal'
-    else:
-        ok_button['state'] = 'disabled'
-        for i in window.children['!frame2'].children.values():
-            i['state'] = 'disabled'
-
-
-def save(deck, vars_):
-    for x in vars_:
-        if x.get():
-            deck.append(ALL_UNITS[vars_.index(x)])
-
-
-def save_deck(vars_, num, cmd):
-    with open('decks/' + cmd + num + '.deck', 'wb') as file:
-        pickle.dump([x.get() for x in vars_], file)
-
-
-def use_deck(vars_, num, command, ok_button, window):
-    num = str(num)
-    try:
-        with open('decks/' + command + num + '.deck', 'rb') as file:
-            for num, x in enumerate(pickle.load(file)):
-                try:
-                    vars_[num].set(x)
-                except IndexError:
-                    print(f'Index Error! {num=}, {x=}!')
-    except FileNotFoundError:
-        for i in range(len(vars_)):
-            vars_[i].set(False)
-
-    update_interface_after_change(vars_, ok_button, window)
-
-
-def resize_frames_in_units_selector(fr1, fr2, fr3):
-    if fr3.winfo_width() % 2 == 0:
-        fr1['width'] = fr3.winfo_width() // 2
-        fr2['width'] = fr3.winfo_width() // 2
-    else:
-        fr1['width'] = fr3.winfo_width() // 2 + 1
-        fr2['width'] = fr3.winfo_width() // 2
-
-
-def select_units(command):
-    if command == RED:
-        command_text_en = 'red'
-        command_text_ru = 'красных'
-        deck = RED_DECK
-    elif command == GREEN:
-        command_text_en = 'green'
-        command_text_ru = 'зелёных'
-        deck = GREEN_DECK
-    else:
-        raise ValueError('Incorrect command!')
-
-    window = tk.Tk()
-    window.title(f'Выбор воинов для {command_text_ru}')
-    window.protocol('WM_DELETE_WINDOW', lambda: [window.destroy(), sys.exit()])
-    vars_ = []
-    fr4 = tk.Frame(window)
-    fr1 = tk.LabelFrame(fr4, bg=command_text_en)
-    fr2 = tk.LabelFrame(fr4, bg=command_text_en)
-    fr3 = tk.LabelFrame(fr4, bg=command_text_en)
-
-    fr1.pack(side=tk.LEFT, fill=tk.BOTH)
-    fr2.pack(side=tk.LEFT, fill=tk.BOTH)
-    fr3.pack(side=tk.LEFT, fill=tk.BOTH)
-    fr4.pack(side=tk.TOP, fill=tk.BOTH)
-    for i in ALL_UNITS:
-        vars_.append(tk.BooleanVar(window, False))
-
-        if ALL_UNITS.index(i) < len(ALL_UNITS) // 3:
-            cur_fr = fr1
-        elif ALL_UNITS.index(i) < len(ALL_UNITS) // 3 * 2:
-            cur_fr = fr2
+def test_all(command):
+    global used, GREEN_POINTS, RED_POINTS
+    for unit in ALL_UNITS:
+        if command == RED:
+            spawner = red_spawn
+        elif command == GREEN:
+            spawner = green_spawn
         else:
-            cur_fr = fr3
-        tk.Checkbutton(
-            cur_fr, bg=command_text_en, fg='white', selectcolor='black',
-            text=UNITS[i.__name__.lower()].get('name', 'Штука'),
-            variable=vars_[-1],
-            command=lambda: update_interface_after_change(vars_, ok_button, window), anchor='w'
-        ).pack()
+            raise ValueError('Command unknown')
 
-    ttk.Label(window, text="Сохранить колоды:").pack()
-    fr5 = tk.Frame(window)
-    fr5.pack(fill=tk.X)
-    for i in range(1, 8):
-        a = tk.Button(
-            fr5, text=str(i),
-            command=lambda x=i: save_deck(vars_, str(x), command_text_en)
-        )
-        a['width'] = 7
-        a.pack(fill=tk.X, side=tk.LEFT)
-    fr5.pack()
-
-    ttk.Label(window, text="Использовать колоды:").pack()
-    fr6 = tk.Frame(window)
-
-    fr6.pack(fill=tk.X)
-    for i in range(1, 8):
-        a = tk.Button(
-            fr6, text=str(i),
-            command=lambda i_=i: use_deck(vars_, i_, command_text_en, ok_button, window)
-        )
-        a['width'] = 7
-        a.pack(fill=tk.X, side=tk.LEFT)
-    fr5.pack()
-
-    ok_button = ttk.Button(window, text="OK", command=lambda: [save(deck, vars_), window.destroy()])
-    ok_button.pack(side=tk.BOTTOM, fill='x')
-    ttk.Button(window, text="HELP", command=help_).pack(side=tk.BOTTOM, fill=tk.X)
-
-    fr1.update_idletasks()
-
-    update_interface_after_change(vars_, ok_button, window)
-
-    window.after(500, lambda: resize_frames_in_units_selector(fr1, fr2, fr3))
-    window.mainloop()
+        if issubclass(unit, Spell):
+            # noinspection PyArgumentList
+            un = SpellInfo(
+                unit,
+                screen,
+                spells,
+                group,
+                command,
+                spawner.reverse
+            )
+        else:
+            un = UnitInfo(
+                unit,
+                screen,
+                command,
+                spawner.rect.center,
+                group,
+                spawner.reverse
+            )
+        un.create()
 
 
 if not AI_RED:
-    select_units(RED)
+    UnitsSelectorWindow(RED, ALL_UNITS, RED_DECK)
+    q_app.exec_()
+
 if not AI_GREEN:
-    select_units(GREEN)
+    UnitsSelectorWindow(GREEN, ALL_UNITS, GREEN_DECK)
+    q_app.exec_()
 
 screen = pygame.display.set_mode([WIDTH, HEIGHT])
 pygame.display.set_caption('Пионерское побоище')
@@ -285,8 +190,8 @@ while not (red_castle.died or green_castle.died):
     screen.fill(WHITE)
     for y, e in enumerate(RED_DECK):
         text = font.render(
-            f'{(y if y < 9 else -1) + 1} - {UNITS[e.__name__.lower()].get("name", "Штука")} '
-            f'({UNITS[e.__name__.lower()]["points"]})',
+            f'{(y if y < 9 else -1) + 1} - {UNITS[e.params_name].get("name", "Штука")} '
+            f'({UNITS[e.params_name]["points"]})',
             1,
             BLACK
         )
@@ -294,8 +199,8 @@ while not (red_castle.died or green_castle.died):
         screen.blit(text, rect)
 
     text = font.render(
-        f'z - {UNITS[red_random.unit.__name__.lower()].get("name", "Штука")} '
-        f'({UNITS[red_random.unit.__name__.lower()]["points"]})',
+        f'z - {UNITS[red_random.unit.params_name].get("name", "Штука")} '
+        f'({UNITS[red_random.unit.params_name]["points"]})',
         1,
         BLACK
     )
@@ -304,8 +209,8 @@ while not (red_castle.died or green_castle.died):
 
     for y, e in enumerate(GREEN_DECK):
         text = font.render(
-            f'{(y if y < 9 else -1) + 1} - {UNITS[e.__name__.lower()].get("name", "Штука")} '
-            f'({UNITS[e.__name__.lower()]["points"]})',
+            f'{(y if y < 9 else -1) + 1} - {UNITS[e.params_name].get("name", "Штука")} '
+            f'({UNITS[e.params_name]["points"]})',
             1,
             BLACK
         )
@@ -313,8 +218,8 @@ while not (red_castle.died or green_castle.died):
         screen.blit(text, rect)
 
     text = font.render(
-        f'/ - {UNITS[green_random.unit.__name__.lower()].get("name", "Штука")} '
-        f'({UNITS[green_random.unit.__name__.lower()]["points"]})',
+        f'/ - {UNITS[green_random.unit.params_name].get("name", "Штука")} '
+        f'({UNITS[green_random.unit.params_name]["points"]})',
         1,
         BLACK
     )
@@ -366,13 +271,15 @@ while not (red_castle.died or green_castle.died):
 
             if e.key == pygame.K_LALT:
                 for y in group:
-                    if y.command == RED and not isinstance(y, Building):
-                        y.retreat = not y.retreat
+                    if isinstance(y, Unit):
+                        if y.command == RED and not isinstance(y, Building):
+                            y.retreat = not y.retreat
 
             if e.key == pygame.K_RALT:
                 for y in group:
-                    if y.command == GREEN and not isinstance(y, Building):
-                        y.retreat = not y.retreat
+                    if isinstance(y, Unit):
+                        if y.command == GREEN and not isinstance(y, Building):
+                            y.retreat = not y.retreat
 
             # MOVING RED SPAWNER
             if e.key == pygame.K_w:
@@ -390,11 +297,11 @@ while not (red_castle.died or green_castle.died):
             if e.key == pygame.K_z and not red_spawn.reverse:
                 err = can_create_unit(group, red_random.unit, red_spawn, used, RED_POINTS)
                 if err:
-                    used['red'][red_random.unit.__name__.lower()] = time.time() + UNITS[red_random.unit.__name__.lower()].get('wait', 0)
+                    used['red'][red_random.unit.params_name] = time.time() + UNITS[red_random.unit.params_name].get('wait', 0)
                     red_random.unit(screen, RED, [red_spawn.rect.centerx, red_spawn.rect.centery], group, False)
                     red_random.time = 0
 
-                    RED_POINTS -= UNITS[red_random.unit.__name__.lower()].get('points', 0)
+                    RED_POINTS -= UNITS[red_random.unit.params_name].get('points', 0)
                 else:
                     ShowError(spells, RED, err.message)
 
@@ -419,12 +326,12 @@ while not (red_castle.died or green_castle.died):
             if e.key == pygame.K_SLASH and not green_spawn.reverse:
                 err = can_create_unit(group, green_random.unit, green_spawn, used, GREEN_POINTS)
                 if err:
-                    used['green'][green_random.unit.__name__.lower()] = time.time() + UNITS[green_random.unit.__name__.lower()].get('wait', 0)
+                    used['green'][green_random.unit.params_name] = time.time() + UNITS[green_random.unit.params_name].get('wait', 0)
 
                     green_random.unit(screen, GREEN, [green_spawn.rect.centerx, green_spawn.rect.centery], group, False)
                     green_random.time = 0
 
-                    GREEN_POINTS -= UNITS[green_random.unit.__name__.lower()].get('points', 0)
+                    GREEN_POINTS -= UNITS[green_random.unit.params_name].get('points', 0)
                 else:
                     ShowError(spells, GREEN, err.message)
 

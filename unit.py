@@ -7,7 +7,7 @@ UNITS = {
         'image': {RED: 'images/red_spawn.png', GREEN: 'images/green_spawn.png'},
         'speed': 10,
     },
-    'randomunit': {
+    'random_unit': {
         'refresh_time': 2,
         'image': {RED: 'images/no.png', GREEN: 'images/no.png'},
     },
@@ -18,10 +18,10 @@ UNITS = {
         'reloading_time': 1.5,
         'image': {RED: 'images/red_soldat.png', GREEN: 'images/green_soldat.png'},
         'speed': 5,
-        'atack_radius': 20,
+        'attack_radius': 20,
         'points': 100,
         'wait': 0.5,
-        'roles': ['atack', 'deaf'],
+        'roles': ['attack', 'deaf'],
     },
     'castle': {
         'name': 'Замок',
@@ -29,7 +29,7 @@ UNITS = {
         'health': 5000,
         'reloading_time': 1,
         'image': {RED: 'images/red_castle.png', GREEN: 'images/green_castle.png'},
-        'atack_radius': 100,
+        'attack_radius': 100,
     },
     'tower': {
         'name': 'Башня',
@@ -37,7 +37,7 @@ UNITS = {
         'health': 2000,
         'reloading_time': 0.8,
         'image': {RED: 'images/red_castle.png', GREEN: 'images/green_castle.png'},
-        'atack_radius': 200,
+        'attack_radius': 200,
     },
     'xbow': {
         'name': 'Арбалет',
@@ -46,7 +46,7 @@ UNITS = {
         'health': 425,
         'reloading_time': 0.1,
         'image': {RED: 'images/red_xbow.png', GREEN: 'images/green_xbow.png'},
-        'atack_radius': 350,
+        'attack_radius': 350,
         'wait': 2,
         'max_count': 2,
         'roles': ['deaf']
@@ -58,10 +58,10 @@ UNITS = {
         'reloading_time': 1.5,
         'image': {RED: 'images/red_archer.png', GREEN: 'images/green_archer.png'},
         'speed': 4,
-        'atack_radius': 100,
+        'attack_radius': 100,
         'points': 100,
         'wait': 0.5,
-        'roles': ['atack', 'deaf'],
+        'roles': ['attack', 'deaf'],
     },
     'gigant': {
         'name': 'Гигант',
@@ -70,10 +70,10 @@ UNITS = {
         'reloading_time': 1.5,
         'image': {RED: 'images/red_gigant.png', GREEN: 'images/green_gigant.png'},
         'speed': 3,
-        'atack_radius': 30,
+        'attack_radius': 30,
         'points': 500,
         'wait': 0.5,
-        'roles': ['atack', 'deaf'],
+        'roles': ['attack', 'deaf'],
     },
     'golem': {
         'name': 'Голем',
@@ -82,13 +82,13 @@ UNITS = {
         'reloading_time': 3,
         'image': {RED: 'images/red_golem.png', GREEN: 'images/green_golem.png'},
         'speed': 1,
-        'atack_radius': 30,
+        'attack_radius': 30,
         'points': 2500,
         'boom_radius': 50,
         'boom_damage': 200,
-        'atack_only': 'Building',
+        'attack_only': 'Building',
         'wait': 0.5,
-        'roles': ['atack'],
+        'roles': ['attack'],
     },
     'cannon_wheels': {
         'name': 'Пушка GO',
@@ -97,10 +97,10 @@ UNITS = {
         'reloading_time': 2,
         'image': {RED: 'images/red_cannon_wheels.png', GREEN: 'images/green_cannon_wheels.png'},
         'speed': 2,
-        'atack_radius': 75,
+        'attack_radius': 75,
         'points': 700,
         'wait': 0.5,
-        'roles': ['atack'],
+        'roles': ['attack'],
     },
     'hill': {
         'name': 'Исцеление',
@@ -120,11 +120,11 @@ UNITS = {
         'reversed': True,
         'roles': ['support'],
     },
-    'doubledamage': {
+    'double_damage': {
         'name': 'Двойной урон',
         'effect_time': 5,
         'points': 300,
-        'image': {RED: 'images/red_doubledamage.png', GREEN: 'images/green_doubledamage.png'},
+        'image': {RED: 'images/red_double_damage.png', GREEN: 'images/green_double_damage.png'},
         'wait': 2,
         'effect': 2,
         'reversed': True,
@@ -138,7 +138,7 @@ UNITS = {
         'image': {RED: 'images/red_meteor.png', GREEN: 'images/green_meteor.png'},
         'self_damage': 1.2,
         'wait': 6,
-        'atack_radius': 70,
+        'attack_radius': 70,
         'reversed': True,
         'reversed_damage': 100,
         'display_time': 1,
@@ -151,11 +151,11 @@ UNITS = {
         'image': {RED: 'images/red_meteor.png', GREEN: 'images/green_meteor.png'},
         'self_damage': 1.2,
         'wait': 6,
-        'atack_radius': 70,
+        'attack_radius': 70,
         'reversed': True,
         'display_time': 1,
         'reversed_damage': 500,
-        'roles': ['atack'],
+        'roles': ['attack'],
     },
     'cannon': {
         'name': 'Пушка',
@@ -163,7 +163,7 @@ UNITS = {
         'health': 500,
         'reloading_time': 1.5,
         'image': {RED: 'images/red_cannon.png', GREEN: 'images/green_cannon.png'},
-        'atack_radius': 100,
+        'attack_radius': 100,
         'points': 500,
         'wait': 0.5,
         'roles': ['deaf'],
@@ -176,24 +176,24 @@ UNITS = {
         'image': {RED: 'images/red_inferno.png', GREEN: 'images/green_inferno.png'},
         'fog_image': 'images/fog.png',
         'fog_display_time': 1,
-        'atack_radius': 1_000_000_000,
+        'attack_radius': 1_000_000_000,
         'points': 1600,
         'wait': 0.5,
         'max_count': 1,
-        'dont_atack': 'Building',
+        'do_not_attack': 'Building',
         'aura': True,
         'aura_rt': 0.5,
         'aura_damage': 40,
         'aura_radius': 80,
         'roles': ['deaf'],
     },
-    'magiccannon': {
+    'magic_cannon': {
         'name': 'Магическая пушка',
         'damage': 50,
         'health': 500,
         'reloading_time': 1.5,
-        'image': {RED: 'images/red_magiccannon.png', GREEN: 'images/green_magiccannon.png'},
-        'atack_radius': 100,
+        'image': {RED: 'images/red_magic_cannon.png', GREEN: 'images/green_magic_cannon.png'},
+        'attack_radius': 100,
         'points': 1000,
         'splash_radius': 30,
         'wait': 2,
@@ -207,7 +207,7 @@ UNITS = {
         'reloading_time': 12,
         'image': {RED: 'images/red_sparky.png', GREEN: 'images/green_sparky.png'},
         'speed': 1,
-        'atack_radius': 170,
+        'attack_radius': 170,
         'points': 1500,
         'splash_radius': 50,
         'aura': True,
@@ -216,22 +216,22 @@ UNITS = {
         'aura_radius': 100,
         'wait': 0.5,
         'first_reload': 4,
-        'roles': ['deaf', 'atack']
+        'roles': ['deaf', 'attack']
     },
-    'soldatspawner': {  # ANC_SOLDAT_SPAWNER #ANC_SOLDATSPAWNER #ANC_KAZARMY
+    'soldat_spawner': {
         'name': 'Казарма',
         'health': 500,
         'reloading_time': 5,
-        'image': {RED: 'images/red_soldatspawner.png', GREEN: 'images/green_soldatspawner.png'},
+        'image': {RED: 'images/red_soldat_spawner.png', GREEN: 'images/green_soldat_spawner.png'},
         'points': 500,
         'wait': 0.5,
         'roles': ['deaf', 'support'],
     },
-    'archerspawner': {
+    'archer_spawner': {
         'name': 'Стрельбище',
         'health': 400,
         'reloading_time': 5,
-        'image': {RED: 'images/red_archerspawner.png', GREEN: 'images/green_archerspawner.png'},
+        'image': {RED: 'images/red_archer_spawner.png', GREEN: 'images/green_archer_spawner.png'},
         'points': 800,
         'wait': 4,
         'roles': ['deaf', 'support'],
@@ -247,7 +247,7 @@ UNITS = {
         's': 200,
         'chance': 0.33,
         'radius': 50,
-        'dont_atack': 'Building',
+        'do_not_attack': 'Building',
         'roles': ['support'],
     },
     'collector': {  # ANC_COLLECTOR
@@ -255,18 +255,21 @@ UNITS = {
         'health': 500,
         'reloading_time': 7,
         'image': {RED: 'images/red_collector.png', GREEN: 'images/green_collector.png'},
+        'image_full': {RED: 'images/red_full_collector.png', GREEN: 'images/green_full_collector.png'},
         'points': 600,
         'max_points': 3000,
         'add_points': 100,
         'wait': 3,
         'roles': ['support'],
     },
-    'molniy': {
+    'lightning': {
         'name': 'Молния',
         'damage': 200,
-        'image': {RED: 'images/no.png', GREEN: 'images/no.png'},
-        'atack_image': {RED: 'images/red_molniy_atack.png',
-                        GREEN: 'images/green_molniy_atack.png'},
+        'image': {RED: 'images/red_lightning.png', GREEN: 'images/green_lightning.png'},
+        'attack_image': {
+            RED: 'images/red_lightning_attack.png',
+            GREEN: 'images/green_lightning_attack.png'
+        },
         'points': 400,
         'display_time': 0.5,
         'wait': 4,
@@ -283,7 +286,7 @@ UNITS = {
         'reloading_time': 1,
         'image': {RED: 'images/red_digger.png', GREEN: 'images/green_digger.png'},
         'speed': 3,
-        'atack_radius': 15,
+        'attack_radius': 15,
         'points': 500,
         'time_spawn': 1,
         'wait': 1,
@@ -292,7 +295,7 @@ UNITS = {
         'aura_damage': 40,
         'aura_radius': 40,
         'aura_rt': 1,
-        'roles': ['atack'],
+        'roles': ['attack'],
     },
     'teleport': {
         'name': 'Телепорт',
@@ -300,26 +303,26 @@ UNITS = {
         'points': 2000,
         'wait': 0.5,
         'reversed': True,
-        'roles': ['support', 'atack'],
+        'roles': ['support', 'attack'],
     },
     'spirit': {
         'name': 'Дух',
         'health': 300,
         'damage': 200,
         'speed': 8,
-        'atack_radius': 30,
+        'attack_radius': 30,
         'points': 300,
         'image': {RED: 'images/red_spirit.png', GREEN: 'images/green_spirit.png'},
         'wait': 3,
-        'died_on_atack': True,
-        'roles': ['atack', 'deaf'],
+        'die_on_attack': True,
+        'roles': ['attack', 'deaf'],
     },
     'cavalry': {
         'name': 'Конница',
         'health': 600,
         'damage': 100,
         'speed': 5,
-        'atack_radius': 30,
+        'attack_radius': 30,
         'reloading_time': 1.5,
         'points': 800,
         'image': {RED: 'images/red_cavalry.png', GREEN: 'images/green_cavalry.png'},
@@ -328,7 +331,7 @@ UNITS = {
         'run_damage': 500,
         'wait': 1.5,
         'run_effect': True,
-        'roles': ['atack', 'deaf'],
+        'roles': ['attack', 'deaf'],
     },
     'push': {
         'name': 'Толчок',
@@ -347,7 +350,7 @@ UNITS = {
         'wait': 0.5,
         'roles': ['deaf', 'support'],
     },
-    'cemetery': {  # ANC_ZOMBI #ANC_CEMETERY #ANC_KLADBISHE
+    'cemetery': {
         'name': "Зомби",
         'effect_time': 10,
         'spawn_time': 1,
@@ -355,14 +358,14 @@ UNITS = {
         'points': 1500,
         'wait': 0.5,
         'reversed': True,
-        'roles': ['atack', 'deaf'],
+        'roles': ['attack', 'deaf'],
     },
     'hiller': {
         'name': 'Целитель',
         'health': 400,
         'damage': 20,
         'speed': 2,
-        'atack_radius': 50,
+        'attack_radius': 50,
         'reloading_time': 2,
         'hill_reloading_time': 2,
         'hill': 30,
@@ -370,17 +373,17 @@ UNITS = {
         'image': {RED: 'images/red_hiller.png', GREEN: 'images/green_hiller.png'},
         'points': 600,
         'wait': 0.5,
-        'roles': ['atack', 'support', 'deaf'],
+        'roles': ['attack', 'support', 'deaf'],
     },
-    'musicant': {  # ANC_MUSICANT
+    'musician': {  # ANC_MUSICIAN
         'name': 'Музыкант',
         'health': 300,
         'damage': 30,
         'speed': 2,
-        'atack_radius': 30,
+        'attack_radius': 30,
         'reloading_time': 2,
         'speeding': 1,
-        'image': {RED: 'images/red_musicant.png', GREEN: 'images/green_musicant.png'},
+        'image': {RED: 'images/red_musician.png', GREEN: 'images/green_musician.png'},
         'points': 500,
         'speed_radius': 100,
         'wait': 0.5,
@@ -403,42 +406,42 @@ UNITS = {
         'reloading_time': 0.8,
         'image': {RED: 'images/red_elite.png', GREEN: 'images/green_elite.png'},
         'speed': 6,
-        'atack_radius': 20,
+        'attack_radius': 20,
         'points': 500,
         'wait': 3,
-        'roles': ['atack', 'deaf'],
+        'roles': ['attack', 'deaf'],
     },
-    'elitearmy': {  # ANC_EL_ARMY
+    'elite_army': {  # ANC_EL_ARMY
         'name': 'Элитная армия',
         'points': 2500,
         'number': 5,
         'wait': 0.5,
-        'roles': ['atack', 'deaf'],
+        'roles': ['attack', 'deaf'],
     },
     'taran': {  # ANC_TARAN
         'name': 'Таран',
         'points': 800,
         'health': 420,
         'damage': 200,
-        'atack_radius': 30,
+        'attack_radius': 30,
         'speed': 2,
         'image': {RED: 'images/red_taran.png', GREEN: 'images/green_taran.png'},
         'number': 1,
         'run_speed': 4,
         'run_damage': 400,
         'run_time': 4,
-        'atack_only': 'Building',
+        'attack_only': 'Building',
         'wait': 5,
-        'died_on_atack': True,
+        'die_on_attack': True,
         'run_effect': True,
-        'roles': ['atack', 'deaf'],
+        'roles': ['attack', 'deaf'],
     },
     'witch': {  # ANC_WITCH
         'name': 'Ведьма',
         'points': 1000,
         'health': 400,
         'damage': 20,
-        'atack_radius': 100,
+        'attack_radius': 100,
         'number': 5,
         'reloading_time': 1,
         'resurrect_time': 6,
@@ -446,7 +449,7 @@ UNITS = {
         'image': {RED: 'images/red_witch.png', GREEN: 'images/green_witch.png'},
         'wait': 3,
         'splash_radius': 50,
-        'ondeath_number': 2,
+        'on_death_number': 2,
         'roles': ['support', 'deaf'],
     },
     'sauron': {
@@ -454,7 +457,7 @@ UNITS = {
         'points': 2000,
         'health': 250,
         'damage': 30,
-        'atack_radius': 180,
+        'attack_radius': 180,
         'number': 1,
         'reloading_time': 1,
         'resurrect_time': 12,
@@ -462,7 +465,7 @@ UNITS = {
         'image': {RED: 'images/red_sauron.png', GREEN: 'images/green_sauron.png'},
         'wait': 3,
         'splash_radius': 50,
-        'ondeath_number': 1,
+        'on_death_number': 1,
         'roles': ['support', 'deaf'],
     },
     'army_archer': {
@@ -479,18 +482,18 @@ UNITS = {
         'health': 500,
         'damage': 100,
         'reloading_time': 2,
-        'atack_radius': 30,
+        'attack_radius': 30,
         'speed': 3,
         'run_speed': 5,
         'run_damage': 200,
         'run_time': 4,
         'get_radius': 100,
         'max_number': 10,
-        'atack_only': 'Building',
+        'attack_only': 'Building',
         'wait': 0.5,
-        'died_on_atack': True,
+        'die_on_attack': True,
         'run_effect': True,
-        'roles': ['atack'],
+        'roles': ['attack'],
     },
     'vampire': {  # ANC_VAMPIRE
         'name': 'Вампир',
@@ -499,12 +502,12 @@ UNITS = {
         'health': 300,
         'damage': 15,
         'reloading_time': 1.5,
-        'atack_radius': 75,
+        'attack_radius': 75,
         'speed': 3,
         'vampirism': 1 + 7 / 100,
         'vampire_radius': 100,
         'wait': 0.5,
-        'roles': ['atack', 'support'],
+        'roles': ['attack', 'support'],
     },
     'wizard': {
         'name': 'Колдун',
@@ -512,7 +515,7 @@ UNITS = {
         'image': {RED: 'images/red_wizard.png', GREEN: 'images/green_wizard.png'},
         'health': 250,
         'damage': 80,
-        'atack_radius': 180,
+        'attack_radius': 180,
         'speed': 3,
         'splash_radius': 50,
         'wait': 0.5,
@@ -526,10 +529,10 @@ UNITS = {
         'health': 1000,
         'damage': 400,
         'reloading_time': 2,
-        'atack_radius': 60,
+        'attack_radius': 60,
         'speed': 1,
         'wait': 0.5,
-        'roles': ['atack', 'deaf'],
+        'roles': ['attack', 'deaf'],
     },
     'bat': {
         'name': 'Летучая мышь',
@@ -538,26 +541,26 @@ UNITS = {
         'damage': 5,
         'image': {RED: 'images/red_bat.png', GREEN: 'images/green_bat.png'},
         'reloading_time': 1.5,
-        'atack_radius': 10,
+        'attack_radius': 10,
         'speed': 6,
         'wait': 0.5,
         'roles': ['support', 'deaf'],
     },
-    'batarmy': {
+    'bat_army': {
         'name': 'Армия мышей',
         'points': 500,
         'number': 20,
         'wait': 1,
-        'roles': ['atack', 'deaf'],
+        'roles': ['attack', 'deaf'],
     },
-    'batmob': {
+    'bat_mob': {
         'name': 'Орава мышей',
         'points': 1000,
         'number': 50,
         'wait': 0.5,
-        'roles': ['atack', 'deaf'],
+        'roles': ['attack', 'deaf'],
     },
-    'throwsoldat': {
+    'soldat_flight': {
         'name': 'Полёт солдат',
         'points': 500,
         'number': 3,
@@ -565,7 +568,7 @@ UNITS = {
         'wait': 6,
         'image': {RED: 'images/red_TS.png', GREEN: 'images/green_TS.png'},
         'reversed': True,
-        'roles': ['atack', 'deaf'],
+        'roles': ['attack', 'deaf'],
     },
     'wall': {
         'name': 'Стена',
@@ -574,28 +577,28 @@ UNITS = {
         'damage': 0,
         'image': {RED: 'images/red_wall.png', GREEN: 'images/green_wall.png'},
         'reloading_time': 30,
-        'atack_radius': 30,
+        'attack_radius': 30,
         'speed': 1,
         'hill_radius': 75,
         'hill': 100,
-        'atack_only': 'Building',
+        'attack_only': 'Building',
         'wait': 0.5,
-        'roles': ['atack', 'deaf'],
+        'roles': ['attack', 'deaf'],
     },
-    'wallbreaker': {
+    'wall_breaker': {
         'name': 'Стенобой',
         'points': 500,
         'health': 300,
         'damage': 400,
-        'image': {RED: 'images/red_wallbreaker.png', GREEN: 'images/green_wallbreaker.png'},
+        'image': {RED: 'images/red_wall_breaker.png', GREEN: 'images/green_wall_breaker.png'},
         'reloading_time': 0,
-        'atack_radius': 30,
+        'attack_radius': 30,
         'speed': 6,
-        'atack_only': 'Building',
+        'attack_only': 'Building',
         'wait': 3,
-        'died_on_atack': True,
+        'die_on_attack': True,
         'splash_radius': 30,
-        'roles': ['atack', 'support'],
+        'roles': ['attack', 'support'],
     },
     'snake': {
         'name': 'Змея',
@@ -604,24 +607,24 @@ UNITS = {
         'damage': 25,
         'image': {RED: 'images/red_snake.png', GREEN: 'images/green_snake.png'},
         'reloading_time': 3,
-        'atack_radius': 30,
+        'attack_radius': 30,
         'speed': 8,
         'venom': 1,
         'venom_time': 3,
         'wait': 3,
-        'roles': ['atack', 'deaf'],
+        'roles': ['attack', 'deaf'],
     },
-    'lifegenerator': {
+    'life_generator': {
         'name': 'Генератор жизни',
         'points': 1000,
         'health': 30,
         'damage': 0,
         'image': {RED: 'images/red_generator.png', GREEN: 'images/green_generator.png'},
         'reloading_time': 2,
-        'atack_radius': 0,
+        'attack_radius': 0,
         'hill_radius': 75,
         'hill': 100,
-        'dont_atack': 'Building',
+        'do_not_attack': 'Building',
         # 'effect_time':30,
         'wait': 0.5,
         'roles': ['support'],
@@ -633,53 +636,53 @@ UNITS = {
         'points': 500,
         'image': {RED: 'images/red_flag.png', GREEN: 'images/green_flag.png'},
         'reloading_time': 11,
-        'atack_radius': 0,
+        'attack_radius': 0,
         'reversed': True,
         'wait': 10,
         'roles': ['support'],
     },
-    'golemlite': {
+    'lite_golem': {
         'name': 'Мини-голем',
         'damage': 50,
         'health': 700,
         'reloading_time': 3,
-        'image': {RED: 'images/red_golemlite.png', GREEN: 'images/green_golemlite.png'},
+        'image': {RED: 'images/red_lite_golem.png', GREEN: 'images/green_lite_golem.png'},
         'speed': 2,
-        'atack_radius': 30,
+        'attack_radius': 30,
         'points': 700,
         'boom_radius': 50,
         'boom_damage': 100,
-        'atack_only': 'Building',
+        'attack_only': 'Building',
         'wait': 0.5,
-        'roles': ['atack'],
+        'roles': ['attack'],
     },
-    'hillbattery': {
+    'hill_battery': {
         'name': "Исцеляющая батарейка",
         'damage': -30,
         'health': 1000,
         'reloading_time': 2,
-        'image': {RED: 'images/red_hillbattery.png', GREEN: 'images/green_hillbattery.png'},
+        'image': {RED: 'images/red_hill_battery.png', GREEN: 'images/green_hill_battery.png'},
         'speed': 3,
-        'atack_radius': 75,
+        'attack_radius': 75,
         'points': 1000,
         'vampirism': -5,
         'wait': 0.5,
-        'atack_command': 'self',
-        'dont_atack': 'Building',
+        'attack_command': 'self',
+        'do_not_attack': 'Building',
         'roles': ['support'],
     },
-    'atackbattery': {
+    'attack_battery': {
         'name': 'Атакующая батарейка',
         'damage': 0,
         'health': 1000,
         'reloading_time': 2,
-        'image': {RED: 'images/red_atackbattery.png', GREEN: 'images/green_atackbattery.png'},
+        'image': {RED: 'images/red_attack_battery.png', GREEN: 'images/green_attack_battery.png'},
         'speed': 3,
-        'atack_radius': 75,
+        'attack_radius': 75,
         'points': 1200,
         'vampirism': -1,
         'wait': 0.5,
-        'roles': ['atack', 'support', 'deaf'],
+        'roles': ['attack', 'support', 'deaf'],
     },
     'cannon_spell': {
         'name': 'Ядро',
@@ -692,13 +695,13 @@ UNITS = {
         'action_radius': 100,
 
         'damage': 100,
-        'atack_reloading_time': 1,
-        'atack_count': 5,
+        'attack_reloading_time': 1,
+        'attack_count': 5,
 
         'hill': 50,
         'hill_count': 5,
         'hill_reloading_time': 1,
-        'roles': ['deaf', 'atack'],
+        'roles': ['deaf', 'attack'],
     },
 
 }
@@ -709,9 +712,9 @@ HELP = {
     'gigant': f'Гигант({UNITS["gigant"]["points"]} очков): Средний воин ближнего боя',
     'hill': f'Исцеление({UNITS["hill"]["points"]} очков): Заклинание, которое восстанавливает '
             f'союзникам {UNITS["hill"]["hill"]} ед. здоровья',
-    'doubledamage': f'Двойной урон({UNITS["doubledamage"]["points"]} очков): Заклинание, '
-                    f'которое удваивает урон, наносимый союзниками, '
-                    f'в течении {UNITS["doubledamage"]["effect_time"]} сек.',
+    'double_damage': f'Двойной урон({UNITS["double_damage"]["points"]} очков): Заклинание, '
+                     f'которое удваивает урон, наносимый союзниками, '
+                     f'в течении {UNITS["double_damage"]["effect_time"]} сек.',
     'meteor': f'Метеорит({UNITS["meteor"]["points"]} очков): Заклинание, атакующее '
               f'все(включая ваши) войска в области. Урон своим уменьшен в '
               f'{UNITS["meteor"]["self_damage"]} раз(а). Наносит больше урона на своей половине',
@@ -722,13 +725,13 @@ HELP = {
               f'атакующее чужих воинов одиночными выстрелами',
     'sparky': f'Электро({UNITS["sparky"]["points"]} очков): Тяжёлый воин'
               f' средней дальности. Имеет сплеш-урон',
-    'soldatspawner': f'Казарма({UNITS["soldatspawner"]["points"]} очков): Здание, '
-                     f'каждые {UNITS["soldatspawner"]["reloading_time"]} '
+    'soldat_spawner': f'Казарма({UNITS["soldat_spawner"]["points"]} очков): Здание, '
+                     f'каждые {UNITS["soldat_spawner"]["reloading_time"]} '
                      f'сек. выпускающее 1 солдата',
     'collector': f'Сборщик({UNITS["collector"]["points"]} очков): Здание, '
                  f'каждые {UNITS["collector"]["reloading_time"]} сек.'
                  f' добавляющее вам 100 очков. Максимум - 3000',
-    'molniy': f'Молния({UNITS["molniy"]["points"]} очков): Заклинание, '
+    'lightning': f'Молния({UNITS["lightning"]["points"]} очков): Заклинание, '
               f'атакующее 3 вражеские цели с наибольшим здоровьем. Останавливает'
               f' атакованных воинов',
     'golem': f'Голем({UNITS["golem"]["points"]} очков): Тяжёлый воин ближнего боя,'
@@ -754,15 +757,15 @@ HELP = {
                 f'1 солдата вокруг замка противника',
     'hiller': f'Целитель({UNITS["hiller"]["points"]} очков): Средний воин средний дальности.'
               f' Непрерывно исцеляет союзников, находящихся в области действия',
-    'musicant': f'Музыкант({UNITS["musicant"]["points"]} очков): Средний воин средней дальности.'
+    'musician': f'Музыкант({UNITS["musician"]["points"]} очков): Средний воин средней дальности.'
                 f' Постоянно ускоряет перемещение и перезарядку союзников в зоне действия',
     'freeze': f'Заморозка({UNITS["freeze"]["points"]} очков): Заклинание, останавливающее врагов '
               f'на {UNITS["freeze"]["effect_time"]} сек.',
     'cannon_wheels': f'Пушка GO({UNITS["cannon_wheels"]["points"]} очков): Средний воин средней'
                      f' дальности. Превращается в обычную пушку при уничтожении',
     'elite': f'Элита({UNITS["elite"]["points"]} очков): Улучшенные солдаты',
-    'elitearmy': f'Армия элит({UNITS["elitearmy"]["points"]} очков): Армия элитных солдат, '
-                 f'состоящая из {UNITS["elitearmy"]["number"]} человек',
+    'elite_army': f'Армия элит({UNITS["elite_army"]["points"]} очков): Армия элитных солдат, '
+                 f'состоящая из {UNITS["elite_army"]["number"]} человек',
     'taran': f'Таран({UNITS["taran"]["points"]} очков): Средний воин ближнего боя.'
              f' Атакует только здания. Создаёт 2-х элит на месте себя при уничтожении '
              f'или при атаке. \n Имеет эффект разгона',
@@ -779,30 +782,30 @@ HELP = {
                f' дальности. Даёт вампиризм воинам в зоне действия',
     'pekka': f'Паук({UNITS["pekka"]["points"]} очков): Тяжёлый воин ближнего боя',
     'bat': f'Мышь({UNITS["bat"]["points"]} очков): Очень лёгкий воин ближнего боя',
-    'batarmy': f'Мышиная армия({UNITS["batarmy"]["points"]} очков): Армия, состоящая из'
-                 f' {UNITS["batarmy"]["number"]} мышей',
-    'batmob': f'Орава мышей({UNITS["batmob"]["points"]} очков): Орава, состоящая '
-                f'из {UNITS["batmob"]["number"]} мышей',
+    'bat_army': f'Мышиная армия({UNITS["bat_army"]["points"]} очков): Армия, состоящая из'
+                 f' {UNITS["bat_army"]["number"]} мышей',
+    'bat_mob': f'Орава мышей({UNITS["bat_mob"]["points"]} очков): Орава, состоящая '
+                f'из {UNITS["bat_mob"]["number"]} мышей',
     'wall': f'Стена({UNITS["wall"]["points"]} очков): Очень тяжёлый воин. Не имеет урона. '
             f'При смерти исцеляет {UNITS["wall"]["hill"]} ед. здоровья всем стоящим рядом войскам',
-    'wallbreaker': f'Стенобой({UNITS["wallbreaker"]["points"]} очков): Средний воин ближнего боя.'
+    'wall_breaker': f'Стенобой({UNITS["wall_breaker"]["points"]} очков): Средний воин ближнего боя.'
                    f' Атакует только здания',
     'snake': f'Змея({UNITS["snake"]["points"]} очков): Средний воин средней дальности. '
              f'При атаке отравляет атакуемого на {UNITS["snake"]["venom_time"]} сек.',
-    'lifegenerator': f'Генератор жизни({UNITS["lifegenerator"]["points"]} очков): Неуязвимое '
+    'life_generator': f'Генератор жизни({UNITS["life_generator"]["points"]} очков): Неуязвимое '
                      f'строение. Исцеляет всем союзным воинам возле себя по'
-                     f' {UNITS["lifegenerator"]["hill"]} ед. здоровья. '
-                     f'Самоуничтожается через {UNITS["lifegenerator"]["health"]} сек.',
-    'golemlite': f'Мини-голем({UNITS["golemlite"]["points"]} очков): Ослабленный голем',
-    'atackbattery': f'Атакующая батарейка({UNITS["atackbattery"]["points"]} очков): Воин средней'
+                     f' {UNITS["life_generator"]["hill"]} ед. здоровья. '
+                     f'Самоуничтожается через {UNITS["life_generator"]["health"]} сек.',
+    'lite_golem': f'Мини-голем({UNITS["lite_golem"]["points"]} очков): Ослабленный голем',
+    'attack_battery': f'Атакующая батарейка({UNITS["attack_battery"]["points"]} очков): Воин средней'
                     f' дальности. На атаку на 1 ед. урона тратит 1 ед. здоровья',
-    'hillbattery': f'Исцеляющая батарейка({UNITS["hillbattery"]["points"]} очков): Воин средней '
+    'hill_battery': f'Исцеляющая батарейка({UNITS["hill_battery"]["points"]} очков): Воин средней '
                    f'дальности. На исцеление 1 ед. здоровья тратит 5 ед. здоровью',
     'cannon_spell': f'Ядро({UNITS["cannon_spell"]["points"]} очков): Неубиваемое заклинание-воин.'
                     f' Движется В сторону противника.\nНаносит урон противникам и '
                     f'исцеляет союзников поблизости.',
-    'throwsoldat': f'Полёт солдат({UNITS["throwsoldat"]["points"]} очков): Бросок нескольких'
-                   f'({UNITS["throwsoldat"]["number"]}) солдат в указанную точку.',
+    'soldat_flight': f'Полёт солдат({UNITS["soldat_flight"]["points"]} очков): Бросок нескольких'
+                   f'({UNITS["soldat_flight"]["number"]}) солдат в указанную точку.',
     'transferer': f'Устройство переноса({UNITS["transferer"]["points"]} очков): Здание,'
                   f' перемещающее 1 воина, находящегося в зоне его действия, на'
                   f' некоторое расстояние вправо(S ꞓ [{UNITS["transferer"]["s"] // 2},'
@@ -814,5 +817,5 @@ HELP = {
     'flag': f'Флаг({UNITS["flag"]["points"]} очков): Здание, заставляющее всех союзных'
             f' воинов перемещатся к нему',
     'xbow': f'Арбалет({UNITS["xbow"]["points"]} очков): Здание. Имеет очень большой '
-            f'({UNITS["xbow"]["atack_radius"]}) радиус атаки.',
+            f'({UNITS["xbow"]["attack_radius"]}) радиус атаки.',
 }

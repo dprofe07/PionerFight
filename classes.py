@@ -7,13 +7,13 @@ import random
 
 import pygame
 
-from funcs import primerno_ravno, distance_between, n_maxes, check_number
+from funcs import distance_between, n_maxes
 from unit import UNITS
 from constants import (
     RED, GREEN,
-    health_font,
-    HEIGHT, WIDTH, WHITE,
+    HEIGHT, WIDTH,
 )
+from base_units import Unit, Spell, Building
 
 pygame.init()
 
@@ -52,315 +52,9 @@ class ShowError(pygame.sprite.Sprite):
             self.group.remove(self)
 
 
-class Unit(pygame.sprite.Sprite):
-    def __init__(self, screen, command, coords, group, sp_reversed):
-        pygame.sprite.Sprite.__init__(self)
-        u = self.param
-        self.screen = screen
-        self.reversed = sp_reversed
-        if sp_reversed:
-            self.damage_ = u.get('reversed_damage', u.get('damage', 0))
-        else:
-            self.damage_ = u.get('damage', 0)
-        self.damage = 0
-        self.health = u.get('health', 0)
-        self.reloading_time = u.get('reloading_time', 0)
-        self.image = pygame.image.load(u.get('image', {command: 'images/no.png'})[command])
-        self.speed_ = u.get('speed', 0)
-        self.speed = 0
-        self.group = group
-        self.rect = self.image.get_rect(center=coords[:2])
-        self.command = command
-        self.atack_radius = u.get('atack_radius', 0)
-        self.target_coords = self.rect
-        self.sped = 0
-        self.vampirism = u.get('vampirism', 0)
-        self.self_spawn_time = 1 + time.time()
-        self.retreat = False
-        self.splash_radius = u.get('splash_radius', 0)
-        self.atack_only = u.get('atack_only', 'Unit')
-        self.atack_command = u.get('atack_command', 'other')
-        self.dont_atack = u.get('dont_atack', 'Spell')
-        self.max_cout = u.get('max_count', 51)
-        if self.atack_command == 'other':
-            if self.command == GREEN:
-                self.atack_command = RED
-            else:
-                self.atack_command = GREEN
-        else:
-            if self.command == GREEN:
-                self.atack_command = GREEN
-            else:
-                self.atack_command = RED
-        self.stun = u.get('stun', 0)
-        self.stunned = False
-        self.atack_time = time.time() + u.get('first_reload', self.reloading_time)
-        self.flag = None
-        self.goto_flag = False
-        self.ignore_flags = []
-        self.died_on_atack = u.get('died_on_atack', False)
-        self.run_effect = u.get('run_effect', False)
-        if self.run_effect:
-            self.time_go = time.time()
-        self.need_update_properties = True
-        self.aura = u.get('aura', False)
-        self.aura_radius = u.get('aura_radius', 0)
-        self.aura_reloading_time = u.get('aura_rt', 0)
-        self.aura_damage = u.get('aura_damage', 0)
-        self.aura_time = time.time() + u.get('first_reload', self.aura_reloading_time)
-        
-        group.add(self)
-
-    def correct_flag(self, flag):
-        return type(flag) == Flag and flag not in self.ignore_flags
-
-    @property
-    def param(self):
-        return UNITS[self.__class__.__name__.lower()]
-
-    @property
-    def vampirism(self):
-        return self.__vampirism
-
-    @vampirism.setter
-    def vampirism(self, v):
-        # if v > 1.5:
-        #  v = 1.5
-        self.__vampirism = v
-
-    @property
-    def died(self):
-        if self.health <= 0 and hasattr(self, 'ondeath'):
-            self.ondeath()
-        return self.health <= 0
-
-    def atack(self, other, need_update_atack_time=True):
-        if type(other) == Flag:
-            self.ignore_flags.append(other)
-            return
-        if self.atack_time > time.time():
-            return
-
-        if self.splash_radius != 0:
-            surf = pygame.Surface([WIDTH, HEIGHT], pygame.SRCALPHA)
-            pygame.draw.circle(
-                surf,
-                tuple(self.command + (50,)),
-                self.target_coords.center,
-                self.splash_radius,
-                2
-            )
-            self.screen.blit(surf, [0, 0])
-
-            targetable = [
-                other.rect.centerx - self.splash_radius,
-                other.rect.centery - self.splash_radius,
-                self.splash_radius * 2,
-                self.splash_radius * 2
-            ]
-            s = self.splash_radius
-            self.splash_radius = 0
-            for x in self.group:
-                if (
-                        x.command != self.command and
-                        pygame.Rect(targetable).colliderect(x) and
-                        x is not other
-                ):
-                    self.atack(x, False)
-            self.splash_radius = s
-
-        other.health -= self.damage
-        self.health += self.vampirism * abs(self.damage)
-        if self.health > self.param['health']:
-            self.health = self.param['health']
-        if need_update_atack_time:
-            self.atack_time = time.time() + self.reloading_time
-        if self.died_on_atack:
-            self.health = 0
-        if self.run_effect:
-            self.time_go = time.time()
-        if self.stun:
-            other.stunned = time.time() + self.stun
-        #   "SMT -atack-> SMT"
-        # print(self.__class__.__name__+' -atack-> '+other.__class__.__name__)
-
-    def update(self):
-        self.update_()
-        if self.self_spawn_time <= time.time():
-            if self.stunned >= time.time():
-                self.need_update_properties = True
-                self.damage = 0
-                self.speed = 0
-                self.atack_time = self.stunned + self.reloading_time
-                self.time_go = self.stunned
-
-                i = pygame.image.load('images/stunned.png')
-                r = i.get_rect(center=[self.rect.centerx, self.rect.top - 20])
-                self.screen.blit(i, r)
-                return False
-            if self.need_update_properties:
-                self.damage = self.damage_
-                self.speed = self.speed_
-                self.need_update_properties = False
-            if self.run_effect:
-                if time.time() - self.time_go >= self.param['run_time']:
-                    self.speed = self.param['run_speed']
-                    self.damage = self.param['run_damage']
-                else:
-                    self.speed = self.param['speed']
-                    self.damage = self.param['damage']
-            if self.aura and self.aura_time < time.time():
-                self.aura_time = time.time() + self.aura_reloading_time
-                
-                surf = pygame.Surface([WIDTH, HEIGHT], pygame.SRCALPHA)
-                pygame.draw.circle(
-                    surf,
-                    tuple(self.command + (50,)),
-                    self.rect.center,
-                    self.aura_radius,
-                    2
-                )
-                self.screen.blit(surf, [0, 0])
-
-                targetable = [
-                    self.rect.centerx - self.aura_radius,
-                    self.rect.centery - self.aura_radius,
-                    self.aura_radius * 2,
-                    self.aura_radius * 2
-                ]
-                for x in self.group:
-                    if (
-                            x.command != self.command and
-                            pygame.Rect(targetable).colliderect(x)
-                    ):
-                        x.health -= self.aura_damage
-            self.choose_target()
-            self.auto_go()
-            return True
-        return False
-
-    def update_(self):
-        text = health_font.render(
-            str(round(self.health if self.health >= 0 else 0)),
-            1,
-            WHITE,
-            self.command
-        )
-        text_rect = text.get_rect(center=[self.rect.centerx, self.rect.top - 8])
-        self.screen.blit(text, text_rect)
-
-    def auto_go(self):
-        atackable = [
-            self.rect.centerx - self.atack_radius,
-            self.rect.centery - self.atack_radius,
-            self.atack_radius * 2,
-            self.atack_radius * 2
-        ]
-        if pygame.Rect(atackable).colliderect(self.target_coords):
-            return self.auto_atack()
-
-        movex = 0
-        movey = 0
-        if not primerno_ravno(self.rect.centerx, self.target_coords.centerx, self.speed):
-            if self.rect.centerx < self.target_coords.centerx:
-                movex = self.speed
-            if self.rect.centerx > self.target_coords.centerx:
-                movex = - self.speed
-        if not primerno_ravno(self.rect.centery, self.target_coords.centery, self.speed):
-            if self.rect.centery < self.target_coords.centery:
-                movey = self.speed
-            if self.rect.centery > self.target_coords.centery:
-                movey = - self.speed
-        self.move(movex, movey)
-
-    def auto_atack(self):
-        best = ''
-        targetable = [
-            self.rect.centerx - self.atack_radius,
-            self.rect.centery - self.atack_radius,
-            self.atack_radius * 2,
-            self.atack_radius * 2
-        ]
-        for x in self.group:
-            if (
-                    (self.correct_flag(x) or x.command == self.atack_command) and
-                    pygame.Rect(targetable).colliderect(x) and
-                    isinstance(x, eval(self.atack_only)) and
-                    not isinstance(x, eval(self.dont_atack))
-            ):
-                if (
-                        best == '' or
-                        distance_between(best, self) > distance_between(self, x)
-                ):
-                    best = x
-        if best != '':
-            self.atack(best)
-
-    def move(self, movex, movey):
-        self.rect.centerx += movex
-        self.rect.centery += movey
-
-        if self.rect.top <= 0:
-            self.rect.top = 0
-        if self.rect.left <= 200:
-            self.rect.left = 200
-        if self.rect.bottom >= HEIGHT:
-            self.rect.bottom = HEIGHT
-        if self.rect.right >= WIDTH - 200:
-            self.rect.right = WIDTH - 200
-
-    def choose_target(self):
-        if self.retreat:
-            for i in self.group:
-                if type(i) == Spawn and i.command == self.command:
-                    self.target_coords = i.rect
-        else:
-            best = ''
-            for x in self.group:
-                if (
-                            (self.correct_flag(x) or x.command == self.atack_command) and
-                            isinstance(x, eval(self.atack_only)) and
-                            not isinstance(x, eval(self.dont_atack))
-                ):
-                    if (
-                            type(x) == Flag and
-                            (
-                                    type(best) != Flag or
-                                    best == '' or
-                                    distance_between(self, best) > distance_between(self, x)
-                            )
-                    ):
-                        best = x
-                    elif (
-                            not x.died and
-                            (
-                                    best == '' or
-                                    distance_between(self, best) > distance_between(self, x)
-                            )
-                    ):
-                        best = x
-
-            if best != '':
-                self.target_coords = best.rect
-            else:
-                for x in self.group:
-                    if not x.died and x.command != self.command and type(x) == Tower:
-                        self.target_coords = x.rect
-                        break
-                else:
-                    for x in self.group:
-                        if not x.died and x.command != self.command and type(x) == Castle:
-                            self.target_coords = x.rect
-                            break
-
-    def __repr__(self):
-        return (
-            f"{self.__class__.__name__}(health = {self.health}, damage = {self.damage}, "
-            f"reloading_time = {self.reloading_time}, speed = {self.speed})"
-        )
-
-
 class Vampire(Unit):
+    params_name = 'vampire'
+
     def __init__(self, screen, command, coords, group, sp_reversed):
         super().__init__(screen, command, coords, group, sp_reversed)
         self.vampired = []
@@ -372,7 +66,7 @@ class Vampire(Unit):
                 x.vampirism -= self.vampirism
             self.vampired = []
             # noinspection DuplicatedCode
-            aviable = [
+            available = [
                 self.rect.centerx - self.vampire_radius,
                 self.rect.centery - self.vampire_radius,
                 self.vampire_radius * 2,
@@ -385,33 +79,34 @@ class Vampire(Unit):
 
             for x in self.group:
                 if x.command == self.command:
-                    if x.rect.colliderect(aviable) and x is not self and type(x) != Castle and type(
-                            x) != Tower:
+                    if x.rect.colliderect(available) and x is not self and type(x) != Castle and type(x) != Tower:
                         x.vampirism += self.vampirism
                         self.vampired.append(x)
 
-    def ondeath(self):
+    def on_death(self):
         for x in self.vampired:
             x.vampirism -= self.vampirism
 
 
 class Wizard(Unit):
-    pass
+    params_name = 'wizard'
 
 
 class Pekka(Unit):
-    pass
+    params_name = 'pekka'
 
 
 class Bat(Unit):
-    pass
+    params_name = 'bat'
 
 
 # noinspection PyMissingConstructor
 class BatArmy(Unit):
+    params_name = 'bat_army'
+
     def __init__(self, screen, command, coords, group, sp_reversed):
         m = None
-        for x in range(-UNITS['batarmy']['number'] // 2, UNITS['batarmy']['number'] // 2):
+        for x in range(-(self.param['number'] // 2), self.param['number'] // 2):
             c = list(coords)
             c[1] += x * 10
             m = Bat(screen, command, c, group, sp_reversed)
@@ -424,10 +119,11 @@ class BatArmy(Unit):
 
 # noinspection PyMissingConstructor
 class BatMob(Unit):
-    def __init__(self, screen, command, coords, group, sp_reversed):
+    params_name = 'bat_mob'
 
+    def __init__(self, screen, command, coords, group, sp_reversed):
         m = None
-        for x in range(-UNITS['batmob']['number'] // 2, UNITS['batmob']['number'] // 2):
+        for x in range(-self.param['number'] // 2, self.param['number'] // 2):
             c = list(coords)
             c[1] += x * 10
             m = Bat(screen, command, c, group, sp_reversed)
@@ -439,16 +135,18 @@ class BatMob(Unit):
 
 
 class Car(Unit):
+    params_name = 'car'
+
     def __init__(self, screen, command, coords, group, sp_reversed):
         super().__init__(screen, command, coords, group, sp_reversed)
         self.time_go = time.time()
         self.get_radius = self.param['get_radius']
         self.inside = []
-        aviable = [self.rect.centerx - self.get_radius, self.rect.centery - self.get_radius,
+        available = [self.rect.centerx - self.get_radius, self.rect.centery - self.get_radius,
                    self.get_radius * 2, self.get_radius * 2]
         for x in self.group:
             if (
-                    x.rect.colliderect(aviable) and
+                    x.rect.colliderect(available) and
                     not isinstance(x, Building) and
                     x is not self and
                     x.command == self.command
@@ -463,7 +161,7 @@ class Car(Unit):
         self.param['speed'] -= minus
         self.param['run_speed'] -= minus
 
-    def ondeath(self):
+    def on_death(self):
         a = [20, -20, 10, -10, 0, -30, 30, -40, 40]
         for x in self.inside:
             x.rect.centerx = self.rect.centerx + random.choice(a)
@@ -472,14 +170,16 @@ class Car(Unit):
 
 
 class Soldat(Unit):
-    pass
+    params_name = 'soldat'
 
 
-class Elite(Soldat):  # ANC_ELITE
-    pass
+class Elite(Soldat):
+    params_name = 'elite'
 
 
 class Witch(Unit):
+    params_name = 'witch'
+
     def __init__(self, screen, command, coords, group, sp_reversed):
         super().__init__(screen, command, coords, group, sp_reversed)
         self.number = self.param['number']
@@ -505,8 +205,8 @@ class Witch(Unit):
 
                 self.spawn_time = time.time() + self.param['resurrect_time']
 
-    def ondeath(self):
-        for x in range(self.param['ondeath_number']):
+    def on_death(self):
+        for x in range(self.param['on_death_number']):
             a = [20, -20]
             # noinspection PyUnusedLocal
             s = Soldat(
@@ -523,6 +223,8 @@ class Witch(Unit):
 
 
 class Sauron(Unit):
+    params_name = 'sauron'
+
     def __init__(self, screen, command, coords, group, sp_reversed):
         super().__init__(screen, command, coords, group, sp_reversed)
         self.number = self.param['number']
@@ -548,8 +250,8 @@ class Sauron(Unit):
 
                 self.spawn_time = time.time() + self.param['resurrect_time']
 
-    def ondeath(self):
-        for x in range(self.param['ondeath_number']):
+    def on_death(self):
+        for x in range(self.param['on_death_number']):
             # noinspection PyUnusedLocal
             s = Wizard(
                 self.screen,
@@ -563,82 +265,71 @@ class Sauron(Unit):
             )
             # s.health = 50
 
-class Sparky(Unit):  # ANC_SPARKY #ANC_ELECTRO
-    pass
+
+class Sparky(Unit):
+    params_name = 'sparky'
 
 
 class Archer(Unit):
-    pass
+    params_name = 'archer'
 
 
 class Gigant(Unit):
-    pass
+    params_name = 'gigant'
 
 
 class Golem(Unit):
+    params_name = 'golem'
+
     def __init__(self, screen, command, coords, group, sp_reversed):
         super().__init__(screen, command, coords, group, sp_reversed)
         self.boom_radius = self.param['boom_radius']
         self.boom_damage = self.param['boom_damage']
 
-    def ondeath(self):
-        targetable = [self.rect.centerx - self.boom_radius, self.rect.centery - self.boom_radius,
+    def on_death(self):
+        targets = [self.rect.centerx - self.boom_radius, self.rect.centery - self.boom_radius,
                       self.boom_radius * 2, self.boom_radius * 2]
         for x in self.group:
-            if x.command != self.command and pygame.Rect(targetable).colliderect(x):
+            if x.command != self.command and pygame.Rect(targets).colliderect(x):
                 x.health -= self.boom_damage
-        if type(self) != GolemLite:
-            GolemLite(self.screen, self.command, (self.rect.centerx, self.rect.centery - 20),
+        if type(self) != LiteGolem:
+            LiteGolem(self.screen, self.command, (self.rect.centerx, self.rect.centery - 20),
                       self.group, False)
-            GolemLite(self.screen, self.command, (self.rect.centerx, self.rect.centery + 20),
+            LiteGolem(self.screen, self.command, (self.rect.centerx, self.rect.centery + 20),
                       self.group, False)
 
 
-class GolemLite(Golem):
-    def ondeath(self):
-        pass
+class LiteGolem(Unit):
+    params_name = 'lite_golem'
 
 
 class WallBreaker(Unit):
-    def choose_target(self):
-        best = ''
-        for x in self.group:
-            if x.command != self.command and isinstance(x, Building):
-                if not x.died and (best == '' or sqrt(
-                        pow(best.rect.centerx - self.rect.centerx, 2) + pow(
-                            best.rect.centery - self.rect.centery, 2)) > sqrt(
-                    pow(self.rect.centerx - x.rect.centerx, 2) + pow(
-                        self.rect.centery - x.rect.centery, 2))):
-                    best = x
-        if best != '':
-            self.target_coords = best.rect
-        else:
-            for x in self.group:
-                if not x.died and x.command != self.command and type(x) == Tower:
-                    self.target_coords = x.rect
-                    break
-            else:
-                for x in self.group:
-                    if not x.died and x.command != self.command and type(x) == Castle:
-                        self.target_coords = x.rect
+    params_name = 'wall_breaker'
 
 
 class Wall(Unit):
+    params_name = 'wall'
+
     def __init__(self, screen, command, coords, group, sp_reversed):
         super().__init__(screen, command, coords, group, sp_reversed)
         self.hill_radius = self.param['hill_radius']
         self.hill = self.param['hill']
 
-    def ondeath(self):
-        targetable = [self.rect.centerx - self.hill_radius, self.rect.centery - self.hill_radius,
-                      self.hill_radius * 2, self.hill_radius * 2]
+    def on_death(self):
+        targets = [
+            self.rect.centerx - self.hill_radius,
+            self.rect.centery - self.hill_radius,
+            self.hill_radius * 2,
+            self.hill_radius * 2
+        ]
         for x in self.group:
-            if x.command == self.command and pygame.Rect(targetable).colliderect(
-                    x) and x is not self:
+            if x.command == self.command and pygame.Rect(targets).colliderect(x) and x is not self:
                 x.health += self.hill
 
 
 class Digger(Unit):
+    params_name = 'digger'
+
     def __init__(self, screen, command, coords, group, sp_reversed):
         self.self_spawn_time = time.time() + self.param['time_spawn']
         super().__init__(screen, command, coords, group, sp_reversed)
@@ -657,17 +348,20 @@ class Digger(Unit):
 
 
 # noinspection PyPep8Naming
-class Cannon_wheels(Unit):  # ANC_CANNON_WHEELS #ANC_WHEELS
-    def ondeath(self):
+class CannonWheels(Unit):  # ANC_CANNON_WHEELS #ANC_WHEELS
+    params_name = 'cannon_wheels'
+    def on_death(self):
         Cannon(self.screen, self.command, self.rect.center, self.group, False)
 
 
 class Taran(Unit):  # ANC_TARAN
+    params_name = 'taran'
+
     def __init__(self, screen, command, coords, group, sp_reversed):
         super().__init__(screen, command, coords, group, sp_reversed)
         self.time_go = time.time()
 
-    def ondeath(self):
+    def on_death(self):
         for x in range(self.param['number']):
             Elite(
                 self.screen,
@@ -682,12 +376,14 @@ class Taran(Unit):  # ANC_TARAN
 
 
 class Snake(Unit):
+    params_name = 'snake'
+
     def __init__(self, screen, command, coords, group, sp_reversed=0):
         super().__init__(screen, command, coords, group, sp_reversed)
         self.self_venom_time = self.param['venom_time']
         self.venom_damage = self.param['venom'] * UNITS['snake']['damage']
 
-    def atack(self, x, need_update_atack_time=True):
+    def attack(self, x, need_update_attack_time=True):
         def n_upd():
             x.update_old()
             if x.venom_time <= time.time():
@@ -696,10 +392,10 @@ class Snake(Unit):
             if x.venom_finish <= time.time():
                 x.update = x.update_old
 
-        if self.atack_time <= time.time():
+        if self.attack_time <= time.time():
             x.venom_time = time.time()
             x.venom_finish = self.self_venom_time + time.time()
-        super().atack(x, need_update_atack_time)
+        super().attack(x, need_update_attack_time)
 
         if not hasattr(x, 'update_old') or x.update_old == x.update:
             x.update_old = x.update
@@ -709,14 +405,16 @@ class Snake(Unit):
 
 
 class Spirit(Unit):
-    pass
+    params_name = 'spirit'
 
 
 class Cavalry(Unit):
-    pass
+    params_name = 'cavalry'
 
 
 class Hiller(Unit):
+    params_name = 'hiller'
+
     def __init__(self, screen, command, coords, group, sp_reversed):
         super().__init__(screen, command, coords, group, sp_reversed)
         self.hill = self.param['hill']
@@ -736,7 +434,7 @@ class Hiller(Unit):
             if self.time_hill <= time.time():
                 self.time_hill = time.time() + self.param['hill_reloading_time']
 
-                targetable = [
+                targets = [
                     self.rect.centerx - self.hill_radius,
                     self.rect.centery - self.hill_radius,
                     self.hill_radius * 2,
@@ -745,7 +443,7 @@ class Hiller(Unit):
                 for x in self.group:
                     if (
                             x.command == self.command and
-                            pygame.Rect(targetable, center=targetable[:2]).colliderect(x) and
+                            pygame.Rect(targets, center=targets[:2]).colliderect(x) and
                             not isinstance(x, Building)
                     ):
                         x.health += self.hill
@@ -755,6 +453,8 @@ class Hiller(Unit):
 
 # noinspection PyMissingConstructor
 class Army(Unit):
+    params_name = 'army'
+
     def __init__(self, screen, command, coords, group, sp_reversed):
         s = None
         for x in range(-self.param['number'] // 2, self.param['number'] // 2):
@@ -776,6 +476,8 @@ class Army(Unit):
 
 # noinspection PyMissingConstructor
 class EliteArmy(Unit):
+    params_name = 'elite_army'
+
     def __init__(self, screen, command, coords, group, sp_reversed):
         e = None
         for x in range(-self.param['number'] // 2, self.param['number'] // 2):
@@ -794,8 +496,10 @@ class EliteArmy(Unit):
         return getattr(self.last_obj, name)
 
 
-# noinspection PyMissingConstructor,PyPep8Naming
-class Army_Archer(Unit):
+# noinspection PyMissingConstructor
+class ArmyArcher(Unit):
+    params_name = 'army_archer'
+
     def __init__(self, screen, command, coords, group, sp_reversed):
         a = None
         for x in range(-self.param['number'] // 2, self.param['number'] // 2):
@@ -814,7 +518,9 @@ class Army_Archer(Unit):
         return getattr(self.last_obj, name)
 
 
-class Musicant(Unit):
+class Musician(Unit):
+    params_name = 'musician'
+
     def __init__(self, screen, command, coords, group, sp_reversed):
         super().__init__(
             screen,
@@ -838,13 +544,13 @@ class Musicant(Unit):
             pygame.draw.circle(surf, tuple(self.command + (75,)), self.rect.center,
                                self.speed_radius)
             self.screen.blit(surf, [0, 0])
-            targetable = [self.rect.centerx - self.speed_radius,
+            targets = [self.rect.centerx - self.speed_radius,
                           self.rect.centery - self.speed_radius, self.speed_radius * 2,
                           self.speed_radius * 2]
             for x in self.group:
                 if (
                         x.command == self.command and
-                        pygame.Rect(targetable, center=targetable[:2]).colliderect(x) and
+                        pygame.Rect(targets, center=targets[:2]).colliderect(x) and
                         not isinstance(x, Building)
                 ):
                     self.sped.append(x)
@@ -852,24 +558,28 @@ class Musicant(Unit):
                 x.speed *= (1 + self.speeding)
                 x.reloading_time //= (1 + self.speeding)
 
-    def ondeath(self):
+    def on_death(self):
         for x in self.sped:
             x.speed //= 1 + self.speeding
             x.reloading_time *= 1 + self.speeding
 
 
 class HillBattery(Unit):
-    def atack(self, x, need_update_atack_time=True):
+    params_name = 'hill_battery'
+
+    def attack(self, x, need_update_attack_time=True):
         dmg = x.param['health'] - x.health
         x.health += dmg
         self.health += self.vampirism * dmg
         # plus because vampirism < 0
 
 
-class AtackBattery(Unit):
-    def atack(self, x, need_update_atack_time=True):
+class AttackBattery(Unit):
+    params_name = 'attack_battery'
+
+    def attack(self, x, need_update_attack_time=True):
         self.damage = min(self.health, x.health)
-        super().atack(x, need_update_atack_time)
+        super().attack(x, need_update_attack_time)
 
 
 #  ЫЫЫЫЫЫЫ   ЫЫЫЫЫЫ   ЫЫЫЫЫ  Ы      Ы       ЫЫЫЫЫЫ
@@ -878,28 +588,10 @@ class AtackBattery(Unit):
 #        Ы   Ы        Ы      Ы      Ы            Ы
 #  ЫЫЫЫЫЫЫ   Ы        ЫЫЫЫЫ  ЫЫЫЫЫ  ЫЫЫЫЫ  ЫЫЫЫЫЫ
 
-class Spell(pygame.sprite.Sprite):
-    def __init__(self, self_group, other_group, command, coords, screen, sp_reversed):
-        super().__init__()
-        self.self_group = self_group
-        self.other_group = other_group
-        self.command = command
-        if self.param.get('image') is not None:
-            self.image = pygame.image.load(self.param['image'][command])
-            self.rect = self.image.get_rect(center=coords[:2])
-        self.self_group.add(self)
-        self.screen = screen
-        self.reversed = sp_reversed
-
-    @property
-    def param(self):
-        return UNITS[type(self).__name__.lower()]
-
-    def __repr__(self):
-        return f'{self.__class__.__name__}(command = {self.command}, rect={self.rect})'
-
 
 class Spawn(Spell):
+    params_name = 'spawn'
+
     def __init__(self, group, command, rect):
         super().__init__(
             group,
@@ -916,9 +608,9 @@ class Spawn(Spell):
     def update(self):
         self.move((self.right - self.left) * self.speed, (self.down - self.up) * self.speed)
 
-    def move(self, movex, movey):
-        self.rect.left += movex
-        self.rect.top += movey
+    def move(self, move_x, move_y):
+        self.rect.left += move_x
+        self.rect.top += move_y
         if (self.command == RED and not self.reverse) or (self.command == GREEN and self.reverse):
             if self.rect.left < 200:
                 self.rect.left = 200
@@ -951,12 +643,14 @@ class Spawn(Spell):
         return self.__reverse
 
     @reverse.setter
-    def reverse(self, nval):
+    def reverse(self, new_val):
         self.rect.centerx = WIDTH - self.rect.centerx
-        self.__reverse = nval
+        self.__reverse = new_val
 
 
 class RandomUnit(Spell):
+    params_name = 'random_unit'
+
     def __init__(self, screen, self_group, other_group, command, sp_reversed):
         super().__init__(
             self_group,
@@ -979,7 +673,9 @@ class RandomUnit(Spell):
                 self.unit = random.choice(ALL_UNITS)
 
 
-class ThrowSoldat(Spell):
+class SoldatFlight(Spell):
+    params_name = 'soldat_flight'
+
     def __init__(self, screen, self_group, other_group, command, sp_reversed):
         super().__init__(
             self_group,
@@ -1013,6 +709,8 @@ class ThrowSoldat(Spell):
 
 
 class Cemetery(Spell):
+    params_name = 'cemetery'
+
     def __init__(self, screen, self_group, other_group, command, sp_reversed):
         coords = []
         for x in self_group:
@@ -1053,6 +751,8 @@ class Cemetery(Spell):
 
 
 class Teleport(Spell):
+    params_name = 'teleport'
+
     def __init__(self, screen, self_group, other_group, command, sp_reversed):
         super().__init__(
             self_group,
@@ -1073,6 +773,8 @@ class Teleport(Spell):
 
 
 class Hill(Spell):
+    params_name = 'hill'
+
     def __init__(self, screen, self_group, other_group, command, sp_reversed):
         super().__init__(
             self_group,
@@ -1096,6 +798,8 @@ class Hill(Spell):
 
 
 class Freeze(Spell):
+    params_name = 'freeze'
+
     def __init__(self, screen, self_group, other_group, command, sp_reversed):
         super().__init__(
             self_group,
@@ -1121,6 +825,8 @@ class Freeze(Spell):
 
 
 class Fix(Spell):
+    params_name = 'fix'
+
     def __init__(self, screen, self_group, other_group, command, sp_reversed):
         super().__init__(
             self_group,
@@ -1143,6 +849,8 @@ class Fix(Spell):
 
 
 class DoubleDamage(Spell):
+    params_name = 'double_damage'
+
     data = {
         RED: {
             'time': 0,
@@ -1190,28 +898,29 @@ class DoubleDamage(Spell):
 
 
 class Meteor(Spell):
+    params_name = 'meteor'
+
     def __init__(self, screen, self_group, other_group, command, sp_reversed):
-        self.atack_radius = self.param['atack_radius']
+        self.attack_radius = self.param['attack_radius']
         rect = [0, 0, 0, 0]
         for x in self_group:
             if type(x) == Spawn and x.command == command:
                 rect = [
-                    x.rect.centerx - self.atack_radius,
-                    x.rect.centery - self.atack_radius,
-                    self.atack_radius * 2,
-                    self.atack_radius * 2
+                    x.rect.centerx - self.attack_radius,
+                    x.rect.centery - self.attack_radius,
+                    self.attack_radius * 2,
+                    self.attack_radius * 2
                 ]
 
         super().__init__(
             self_group,
             other_group,
             command,
-            [rect[0] + self.atack_radius, rect[1] + self.atack_radius, rect[2], rect[3]],
+            [rect[0] + self.attack_radius, rect[1] + self.attack_radius, rect[2], rect[3]],
             screen,
             sp_reversed
         )
         dmg = self.param['damage'] if not sp_reversed else self.param['reversed_damage']
-
 
         for x in self.other_group:
             if x.rect.colliderect(rect):
@@ -1228,10 +937,12 @@ class Meteor(Spell):
 
 
 class Rocket(Meteor):
-    pass
+    params_name = 'rocket'
 
 
-class Molniy(Spell):
+class Lightning(Spell):
+    params_name = 'lightning'
+
     def __init__(self, screen, self_group, other_group, command, sp_reversed):
         rect = [0, 0, 0, 0]
         for i in self_group:
@@ -1272,7 +983,7 @@ class Molniy(Spell):
         for i in range(len(best)):
             if best[i] is not None:
                 best[i].health -= dmg
-                img = pygame.image.load(self.param['atack_image'][command])
+                img = pygame.image.load(self.param['attack_image'][command])
                 self.images.append(img)
 
                 rect = img.get_rect(
@@ -1283,7 +994,7 @@ class Molniy(Spell):
                 )
                 self.rects.append(rect)
 
-                best[i].atack_time = time.time() + best[i].reloading_time
+                best[i].attack_time = time.time() + best[i].reloading_time
                 best[i].time_go = time.time()
 
         self.time = time.time() + 1
@@ -1297,6 +1008,8 @@ class Molniy(Spell):
 
 
 class Push(Spell):
+    params_name = 'push'
+
     def __init__(self, screen, self_group, other_group, command, sp_reversed):
         rect = [400, 200, 400, 400] if command == RED else [800, 200, 400, 400]
         super().__init__(
@@ -1320,15 +1033,16 @@ class Push(Spell):
                     x.rect.centerx += self.param['force']
 
 
-# noinspection PyPep8Naming
-class Cannon_Spell(Spell):
+class CannonSpell(Spell):
+    params_name = 'cannon_spell'
+
     def __init__(self, screen, self_group, other_group, command, sp_reversed):
         pygame.sprite.Sprite.__init__(self)
         rect = [0, 0]
         for x in self_group:
             if type(x) == Spawn and x.command == command:
                 rect = x.rect.center
-                self.startx = x.rect.left if command == GREEN else x.rect.right
+                self.start_x = x.rect.left if command == GREEN else x.rect.right
 
         super().__init__(
             self_group,
@@ -1341,38 +1055,38 @@ class Cannon_Spell(Spell):
         self.speed = self.param['speed']
         self.damage = self.param['damage']
         self.hill = self.param['hill']
-        self.atack_time = 0
+        self.attack_time = 0
         self.hill_time = 0
-        self.atack_reloading_time = self.param['atack_reloading_time']
-        self.hill_radius = self.atack_radius = self.param['action_radius']
+        self.attack_reloading_time = self.param['attack_reloading_time']
+        self.hill_radius = self.attack_radius = self.param['action_radius']
         self.hill_reloading_time = self.param['hill_reloading_time']
         self.group = self.other_group
         self.moving = self.param['moving']
 
-    def hillf(self, other):
-        if self.atack_time > time.time():
+    def hill_func(self, other):
+        if self.attack_time > time.time():
             return
         other.health += self.hill
         self.hill_time = time.time() + self.hill_reloading_time
 
-    def atackf(self, other):
+    def attack_func(self, other):
         other.health -= self.damage
 
-    def auto_atack(self):
-        return self.make_action('atack')
+    def auto_attack(self):
+        return self.make_action('attack')
 
     def auto_hill(self):
         self.make_action('hill')
 
     def make_action(self, action):
-        if action == 'atack':
-            f = self.atackf
-            rad = self.atack_radius
-            time_ = self.atack_time
-            rel_time = self.atack_reloading_time
+        if action == 'attack':
+            f = self.attack_func
+            rad = self.attack_radius
+            time_ = self.attack_time
+            rel_time = self.attack_reloading_time
             cmd_eq_neq = lambda a, b: a != b
         elif action == 'hill':
-            f = self.hillf
+            f = self.hill_func
             rad = self.hill_radius
             time_ = self.hill_time
             rel_time = self.hill_reloading_time
@@ -1382,12 +1096,12 @@ class Cannon_Spell(Spell):
 
         if time_ > time.time():
             return
-        if action == 'atack':
-            self.atack_time = time.time() + rel_time
+        if action == 'attack':
+            self.attack_time = time.time() + rel_time
         elif action == 'hill':
             self.hill_time = time.time() + rel_time
 
-        targetable = [
+        targets = [
             self.rect.centerx - rad,
             self.rect.centery - rad,
             rad * 2,
@@ -1395,7 +1109,7 @@ class Cannon_Spell(Spell):
         ]
         can_be_best = []
         for x in self.group:
-            if cmd_eq_neq(x.command, self.command) and pygame.Rect(targetable).colliderect(x):
+            if cmd_eq_neq(x.command, self.command) and pygame.Rect(targets).colliderect(x):
                 can_be_best.append(x)
 
         best = n_maxes(
@@ -1413,13 +1127,17 @@ class Cannon_Spell(Spell):
 
     def update(self):
         self.auto_go()
-        self.auto_atack()
+        self.auto_attack()
         self.auto_hill()
 
-    def move(self, movex):
-        self.rect.centerx += movex
-        if self.command == RED and self.rect.right >= self.startx + self.moving or self.command == GREEN and self.rect.left <= self.startx - self.moving:
-            self.self_group.remove(self)
+    def move(self, move_x):
+        self.rect.centerx += move_x
+        if self.command == RED:
+            if (
+                    self.rect.right >= self.start_x + self.moving or
+                    self.command == GREEN and self.rect.left <= self.start_x - self.moving
+            ):
+                self.self_group.remove(self)
 
 
 # ЫЫЫЫ   Ы   Ы  ЫЫЫЫЫ Ы      ЫЫЫЫ   ЫЫЫЫЫ  Ы     Ы   ЫЫЫЫ    ЫЫЫЫЫ
@@ -1427,30 +1145,12 @@ class Cannon_Spell(Spell):
 # ЫЫЫЫЫ  Ы   Ы    Ы   Ы      Ы   Ы    Ы    Ы  Ы  ы  Ы  ЫЫЫ   ЫЫЫЫЫ  
 # Ы   Ы  Ы   Ы    Ы   Ы      Ы   Ы    Ы    Ы   Ы Ы  Ы     Ы       Ы
 # ЫЫЫЫ    ЫЫЫ   ЫЫЫЫЫ ЫЫЫЫЫ  ЫЫЫЫ   ЫЫЫЫЫ  Ы    ЫЫ   ЫЫЫЫ Ы  ЫЫЫЫЫ
-#                                                                         
-
-
-class Building(Unit):
-    def __init__(self, screen, command, coords, group, sp_reversed):
-        super().__init__(
-            screen,
-            command,
-            coords,
-            group,
-            sp_reversed
-        )
-        self.time_del = time.time() + 0.5
-
-    def update(self):
-        if super().update():
-            if self.time_del <= time.time():
-                self.health -= 2
-                self.time_del = time.time() + 0.5
-            return True
-        return False
+#
 
 
 class HealthByTime(Building):
+    params_name = 'health_by_time'
+
     def __init__(self, screen, command, coords, group, sp_reversed):
         super().__init__(
             screen,
@@ -1481,10 +1181,13 @@ class HealthByTime(Building):
 
     def set_health(self, v, a=False):
         if a:
+            # noinspection PyAttributeOutsideInit
             self.__health = v
 
 
 class Flag(HealthByTime):
+    params_name = 'flag'
+
     def update(self):
         if super().update():
             for i in self.group:
@@ -1494,6 +1197,8 @@ class Flag(HealthByTime):
 
 
 class LifeGenerator(HealthByTime):
+    params_name = 'life_generator'
+
     def __init__(self, screen, command, coords, group, sp_reversed):
         super().__init__(
             screen,
@@ -1511,7 +1216,7 @@ class LifeGenerator(HealthByTime):
     def update(self):
         if super().update():
             # noinspection DuplicatedCode
-            aviable = [
+            available = [
                 self.rect.centerx - self.hill_radius,
                 self.rect.centery - self.hill_radius,
                 self.hill_radius * 2,
@@ -1530,7 +1235,7 @@ class LifeGenerator(HealthByTime):
                 for x in self.group:
                     if x.command == self.command:
                         if (
-                                x.rect.colliderect(aviable) and
+                                x.rect.colliderect(available) and
                                 x is not self
                                 and not isinstance(x, Building)
                         ):
@@ -1541,10 +1246,12 @@ class LifeGenerator(HealthByTime):
 
 
 class Xbow(Building):
-    pass
+    params_name = 'xbow'
 
 
 class Transferer(Building):
+    params_name = 'transferer'
+
     def __init__(self, screen, command, coords, group, sp_reversed):
         super().__init__(
             screen,
@@ -1569,7 +1276,7 @@ class Transferer(Building):
             if self.time_tp <= time.time():
                 self.time_tp = time.time() + self.reloading_time
 
-                targetable = [
+                targets = [
                     self.rect.centerx - self.radius,
                     self.rect.centery - self.radius,
                     self.radius * 2,
@@ -1579,8 +1286,8 @@ class Transferer(Building):
                     # noinspection PyArgumentList
                     if (
                             x.command == self.command and
-                            pygame.Rect(targetable, center=targetable[:2]).colliderect(x) and
-                            not isinstance(x, eval(self.param.get('dont_atack', 'Spell')))
+                            pygame.Rect(targets, center=targets[:2]).colliderect(x) and
+                            not isinstance(x, eval(self.param.get('dont_attack', 'Spell')))
                     ):
                         ch = [1] * round((1 / self.chance) - 1) + [-1]
                         s = random.choice(ch) * random.randint(self.s // 2, self.s)
@@ -1589,15 +1296,17 @@ class Transferer(Building):
 
 
 class Cannon(Building):
-    pass
+    params_name = 'cannon'
 
 
 class MagicCannon(Building):
-    pass
+    params_name = 'magic_cannon'
 
 
 class Spawner(Building):
-    def __init__(self, screen, command, coords, group, voin_cls):
+    params_name = 'spawner'
+
+    def __init__(self, screen, command, coords, group, unit_cls):
         super().__init__(
             screen,
             command,
@@ -1606,26 +1315,32 @@ class Spawner(Building):
             False
         )
         self.spawn_time = self.reloading_time + time.time()
-        self.voin_cls = voin_cls
+        self.unit_cls = unit_cls
 
     def update(self):
         if super().update():
             if self.spawn_time <= time.time():
-                self.voin_cls(self.screen, self.command, self.rect.center, self.group, False)
+                self.unit_cls(self.screen, self.command, self.rect.center, self.group, False)
                 self.spawn_time = time.time() + self.reloading_time
 
 
 class SoldatSpawner(Spawner):
+    params_name = 'soldat_spawner'
+
     def __init__(self, screen, command, coords, group, sp_reversed):
         super().__init__(screen, command, coords, group, Soldat)
 
 
 class ArcherSpawner(Spawner):
-    def __init__(self, screen, command, coords, group, reversed=0):
+    params_name = 'archer_spawner'
+
+    def __init__(self, screen, command, coords, group, sp_reversed):
         super().__init__(screen, command, coords, group, Archer)
 
 
 class Collector(Building):
+    params_name = 'collector'
+
     def __init__(self, screen, command, coords, group, sp_reversed):
         super().__init__(screen, command, coords, group, sp_reversed)
         self.add_time = 0
@@ -1647,50 +1362,49 @@ class Collector(Building):
             )
         else:
             self.image = pygame.image.load(
-                self.param['image'][self.command].replace('.png', '_full.png')
+                self.param['image_full'][self.command]
             )
         super().update()
 
 
 class Inferno(Building):
+    params_name = 'inferno'
+
     def __init__(self, screen, command, coords, group, sp_reversed):
         super().__init__(screen, command, coords, group, sp_reversed)
         self.fog_time = 0
         self.fog_image = pygame.image.load(self.param['fog_image'])
         self.fog_rect = [0, 0]
 
-    def atack(self, other, need_update_atack_time=True):
-        if self.atack_time < time.time():
+    def attack(self, other, need_update_attack_time=True):
+        if self.attack_time < time.time():
             rect = other.rect
             self.fog_rect = self.fog_image.get_rect(center=rect.center)
             self.fog_time = time.time() + self.param['fog_display_time']
-        super().atack(other, need_update_atack_time)
+        super().attack(other, need_update_attack_time)
 
     def update(self):
         super().update()
         if self.fog_time >= time.time():
             self.screen.blit(self.fog_image, self.fog_rect)
 
-    def auto_atack(self):
+    def auto_attack(self):
         variants = []
         for x in self.group:
             if (
-                    (self.correct_flag(x) or x.command == self.atack_command) and
-                    isinstance(x, eval(self.atack_only)) and
-                    not isinstance(x, eval(self.dont_atack))
+                    (self.correct_flag(x) or x.command == self.attack_command) and
+                    isinstance(x, eval(self.attack_only)) and
+                    not isinstance(x, eval(self.dont_attack))
             ):
                 variants.append(x)
 
         if len(variants) >= 3:
-            self.atack(random.choice(variants))
-
-
-
-
-
+            self.attack(random.choice(variants))
 
 
 class Castle(Building):
+    params_name = 'castle'
+
     def destroyed(self):
         self.image = pygame.image.load('images/castle_destroy.png')
         self.damage = 0
@@ -1701,7 +1415,7 @@ class Castle(Building):
 
 
 class Tower(Castle):
-    pass
+    params_name = 'tower'
 
 
 class Info:
@@ -1762,8 +1476,8 @@ class UnitInfo(Info):
             self.reversed
         )
 
-        if hasattr(self, 'oncreate'):
-            self.oncreate(self)
+        if hasattr(self, 'on_create'):
+            self.on_create(self)
 
         return self.created
 
@@ -1779,6 +1493,7 @@ class UnitInfo(Info):
             self.coords == other.coords,
             self.reversed == other.reversed
         ])
+
 
 class SpellInfo(Info):
     # noinspection PyMissingConstructor
@@ -1803,8 +1518,8 @@ class SpellInfo(Info):
             self.reversed
         )
 
-        if hasattr(self, 'oncreate'):
-            self.oncreate(self)
+        if hasattr(self, 'on_create'):
+            self.on_create(self)
 
         return self.created
 
@@ -1833,18 +1548,14 @@ class SpellInfo(Info):
         ])
 
 
-
-
-
-
 ALL_UNITS = [
     Soldat, Archer, Gigant, Hill, DoubleDamage, Meteor,
-    Rocket, Cannon, Sparky, SoldatSpawner, Collector, Molniy,
+    Rocket, Cannon, Sparky, SoldatSpawner, Collector, Lightning,
     Golem, Digger, Teleport, Spirit, Cavalry, Push, Fix, Army,
-    Cemetery, Hiller, Musicant, Freeze, Cannon_wheels, Elite,
-    EliteArmy, Taran, Witch, Army_Archer, Car, Vampire,
+    Cemetery, Hiller, Musician, Freeze, CannonWheels, Elite,
+    EliteArmy, Taran, Witch, ArmyArcher, Car, Vampire,
     Pekka, BatArmy, BatMob, Wall, WallBreaker,
-    Snake, LifeGenerator, GolemLite, HillBattery, AtackBattery,
-    Cannon_Spell, ThrowSoldat, Wizard,  ArcherSpawner,
+    Snake, LifeGenerator, LiteGolem, HillBattery, AttackBattery,
+    CannonSpell, SoldatFlight, Wizard,  ArcherSpawner,
     Transferer, MagicCannon, Xbow, Sauron, Inferno,  # Flag
 ]
