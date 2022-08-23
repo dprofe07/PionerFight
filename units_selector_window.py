@@ -48,9 +48,9 @@ class UnitsSelectorWindow(QWidget):
 
         self.hbox_save_decks = QHBoxLayout()
         self.btns_save = []
-        for i in range(7):
+        for i in range(len(self.gamer.saved_decks)):
             btn = QPushButton(str(i + 1))
-            btn.clicked.connect(partial(self.on_save_btn_click, i + 1))
+            btn.clicked.connect(partial(self.on_save_btn_click, i))
             self.btns_save.append(btn)
             self.hbox_save_decks.addWidget(btn)
         self.vbox.addLayout(self.hbox_save_decks)
@@ -61,9 +61,9 @@ class UnitsSelectorWindow(QWidget):
 
         self.hbox_load_decks = QHBoxLayout()
         self.btns_load = []
-        for i in range(7):
+        for i in range(len(self.gamer.saved_decks)):
             btn = QPushButton(str(i + 1))
-            btn.clicked.connect(partial(self.on_load_btn_click, i + 1))
+            btn.clicked.connect(partial(self.on_load_btn_click, i))
             self.btns_load.append(btn)
             self.hbox_load_decks.addWidget(btn)
 
@@ -75,6 +75,22 @@ class UnitsSelectorWindow(QWidget):
         self.btn_ok = QPushButton('OK')
         self.btn_ok.clicked.connect(self.on_ok_button_click)
         self.vbox.addWidget(self.btn_ok)
+
+        self.units_names = [i.params_name for i in self.units_list]
+        for i in self.check_boxes:
+            i.setCheckState(0)
+        for name in self.gamer.last_deck:
+            try:
+                self.check_boxes[self.units_names.index(name)].setCheckState(2)
+            except ValueError:
+                # print(f'Value Error! {name=}!')
+                mb = QMessageBox(
+                    QMessageBox.Warning,
+                    "Предупреждение",
+                    f"Не найден воин (заклинание) \"{UNITS.get(name, {'name': name}).get('name', 'Штука')}\"",
+                    QMessageBox.Ok
+                )
+                mb.exec()
 
         self.update_interface_after_change()
 
@@ -92,37 +108,36 @@ class UnitsSelectorWindow(QWidget):
             if chk_box.checkState() == 2:
                 self.gamer.deck.append(self.units_list[i])
         self.success = True
+        self.gamer.save_info()
         self.close()
 
     def on_load_btn_click(self, number):
-        num = str(number)
-        units_name = [i.params_name for i in self.units_list]
         for i in self.check_boxes:
             i.setCheckState(0)
-        try:
-            with open('decks/' + self.command_en + num + '.deck', 'rb') as file:
-                for name in pickle.load(file):
-                    try:
-                        self.check_boxes[units_name.index(name)].setCheckState(2)
-                    except ValueError:
-                        # print(f'Value Error! {name=}!')
-                        mb = QMessageBox(
-                            QMessageBox.Warning,
-                            "Предупреждение",
-                            f"Не найден воин (заклинание) \"{UNITS[name].get('name', 'Штука')}\"",
-                            QMessageBox.Ok
-                        )
-                        mb.exec()
-
-        except FileNotFoundError:
-            pass
+        for name in self.gamer.saved_decks[number
+        
+        ]:
+            try:
+                self.check_boxes[self.units_names.index(name)].setCheckState(2)
+            except ValueError:
+                # print(f'Value Error! {name=}!')
+                mb = QMessageBox(
+                    QMessageBox.Warning,
+                    "Предупреждение",
+                    f"Не найден воин (заклинание) \"{UNITS[name].get('name', 'Штука')}\"",
+                    QMessageBox.Ok
+                )
+                mb.exec()
 
         self.update_interface_after_change()
 
     def on_save_btn_click(self, number):
-        units_names = [i.params_name for i in self.units_list]
-        with open('decks/' + self.command_en + str(number) + '.deck', 'wb') as file:
-            pickle.dump([units_names[i] for i in range(len(self.check_boxes)) if self.check_boxes[i].checkState() == 2], file)
+        self.gamer.saved_decks[number] = [
+            self.units_names[i]
+            for i in range(len(self.check_boxes))
+            if self.check_boxes[i].checkState() == 2
+        ]
+        self.gamer.save_info()
 
     def update_interface_after_change(self):
         if self.check_units_in_deck_count():

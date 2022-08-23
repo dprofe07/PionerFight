@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import QApplication
 
 # IMPORTS
 from base_units import Unit
-from funcs import delete_extra, help_, check_number
+from funcs import delete_extra, help_, check_number, get_user_login
 from classes import (
     ALL_UNITS, Building, Spell,
     Castle, Tower,
@@ -56,7 +56,6 @@ def test_all(gamer):
             )
         un.create()
 
-
 modes_selector = ModesSelectorWindow(ALL_UNITS)
 q_app.exec_()
 ALL_UNITS = modes_selector.all_units
@@ -65,9 +64,16 @@ use_random_unit = modes_selector.use_random_unit
 red_gamer.deck = modes_selector.result_deck[:]
 green_gamer.deck = modes_selector.result_deck[:]
 
+red_login = get_user_login(q_app, 'красного')
+red_gamer.load_info(red_login)
+
 if not AI_RED and modes_selector.need_ask_decks:
     UnitsSelectorWindow(red_gamer, ALL_UNITS)
     q_app.exec_()
+
+
+green_login = get_user_login(q_app, 'зелёного')
+green_gamer.load_info(green_login)
 
 if not AI_GREEN and modes_selector.need_ask_decks:
     UnitsSelectorWindow(green_gamer, ALL_UNITS)

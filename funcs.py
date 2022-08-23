@@ -1,9 +1,12 @@
 # ***funcs.py***
 
 import math
+import sys
 import time
 from tkinter import *
 import tkinter as tk
+
+from PyQt5.QtWidgets import QInputDialog, QWidget
 
 from unit import UNITS, HELP
 from constants import RED, GREEN
@@ -187,8 +190,22 @@ class Error:
 
 def debug(fn):
     def wrapper(*a, **kw):
-        print(f'runned function {fn.__name__} with {a=}, {kw=}')
+        print(f'ran function {fn.__name__} with {a=}, {kw=}')
         res = fn(*a, **kw)
         print(f'returned: {res}')
         return res
     return wrapper
+
+
+def get_user_login(q_app, command):
+    wid = QWidget()
+    text, ok = QInputDialog.getText(
+        wid,
+        'Авторизация',
+        f'Введите логин {command} игрока'
+    )
+
+    if not ok:
+        sys.exit()
+
+    return text

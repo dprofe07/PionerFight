@@ -14,6 +14,7 @@ UNITS = {
     'soldat': {
         'name': 'Солдат',
         'damage': 10,
+        'shield': 1,
         'health': 100,
         'reloading_time': 1.5,
         'image': {RED: 'images/red_soldat.png', GREEN: 'images/green_soldat.png'},
@@ -55,6 +56,7 @@ UNITS = {
         'name': 'Лучник',
         'damage': 15,
         'health': 50,
+        'shield': 1,
         'reloading_time': 1.5,
         'image': {RED: 'images/red_archer.png', GREEN: 'images/green_archer.png'},
         'speed': 4,
@@ -541,6 +543,7 @@ UNITS = {
         'image': {RED: 'images/red_pekka.png', GREEN: 'images/green_pekka.png'},
         'health': 1000,
         'damage': 400,
+        'shield': 50,
         'reloading_time': 2,
         'attack_radius': 60,
         'speed': 1,

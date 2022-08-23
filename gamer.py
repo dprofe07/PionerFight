@@ -1,3 +1,4 @@
+import pickle
 import time
 
 from base_units import Spell
@@ -12,6 +13,10 @@ class Gamer:
         self.color = color
         self.ru_name = ru_name
         self.en_name = en_name
+        self.last_deck = []
+        self.login = ''
+
+        self.saved_decks = []
 
         self.deck = List()
         self.used = {
@@ -107,6 +112,39 @@ class Gamer:
         if not only_info:
             un.create()
         return un
+
+    def load_info(self, login):
+        self.login = login
+        try:
+            with open('users/' + login + '.usr', 'rb') as f:
+                dct = pickle.load(f)
+                self.saved_decks = dct['decks']
+                self.last_deck = dct['last_deck']
+
+        except FileNotFoundError:
+            with open('users/' + login + '.usr', 'wb') as f:
+                dct = self.get_default_data()
+                pickle.dump(dct, f)
+            self.load_info(login)
+
+    def save_info(self):
+        with open('users/' + self.login + '.usr', 'wb') as f:
+            pickle.dump(self.to_dict(), f)
+
+    def to_dict(self):
+        return {
+            'decks': self.saved_decks,
+            'last_deck': [i.params_name for i in self.deck],
+        }
+
+    @staticmethod
+    def get_default_data():
+        return {
+            'decks': [
+                [], [], [], [], [], [], []
+            ],
+            'last_deck': [],
+        }
 
 
 green_gamer = Gamer(GREEN, 'зелёные', 'green')
