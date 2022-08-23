@@ -291,7 +291,7 @@ class Golem(Unit):
                       self.boom_radius * 2, self.boom_radius * 2]
         for x in self.group:
             if x.command != self.command and pygame.Rect(targets).colliderect(x):
-                x.health -= self.boom_damage
+                x.attacked(self.boom_damage)
         if type(self) != LiteGolem:
             LiteGolem(self.screen, self.command, (self.rect.centerx, self.rect.centery - 20),
                       self.group, False)
@@ -387,7 +387,7 @@ class Snake(Unit):
         def n_upd():
             x.update_old()
             if x.venom_time <= time.time():
-                x.health -= self.venom_damage
+                x.attacked(self.venom_damage)
                 x.venom_time = 1 + time.time()
             if x.venom_finish <= time.time():
                 x.update = x.update_old
@@ -925,9 +925,9 @@ class Meteor(Spell):
         for x in self.other_group:
             if x.rect.colliderect(rect):
                 if x.command == command:
-                    x.health -= dmg * self.param['self_damage']
+                    x.attacked(dmg * self.param['self_damage'])
                 else:
-                    x.health -= dmg
+                    x.attacked(dmg)
 
         self.time = time.time() + self.param['display_time']
 
@@ -938,6 +938,42 @@ class Meteor(Spell):
 
 class Rocket(Meteor):
     params_name = 'rocket'
+
+
+class ShieldBreaker(Spell):
+    params_name = 'shield_breaker'
+
+    def __init__(self, screen, self_group, other_group, command, sp_reversed):
+        self.attack_radius = self.param['attack_radius']
+        rect = [0, 0, 0, 0]
+        for x in self_group:
+            if type(x) == Spawn and x.command == command:
+                rect = [
+                    x.rect.centerx - self.attack_radius,
+                    x.rect.centery - self.attack_radius,
+                    self.attack_radius * 2,
+                    self.attack_radius * 2
+                ]
+
+        super().__init__(
+            self_group,
+            other_group,
+            command,
+            [rect[0] + self.attack_radius, rect[1] + self.attack_radius, rect[2], rect[3]],
+            screen,
+            sp_reversed
+        )
+        dmg = self.param['damage'] if not sp_reversed else self.param['reversed_damage']
+
+        for x in self.other_group:
+            if x.rect.colliderect(rect) and x.command != command:
+                x.attacked(0, dmg * x.shield)
+
+        self.time = time.time() + self.param['display_time']
+
+    def update(self):
+        if self.time <= time.time():
+            self.self_group.remove(self)
 
 
 class Lightning(Spell):
@@ -982,7 +1018,7 @@ class Lightning(Spell):
 
         for i in range(len(best)):
             if best[i] is not None:
-                best[i].health -= dmg
+                best[i].attacked(dmg)
                 img = pygame.image.load(self.param['attack_image'][command])
                 self.images.append(img)
 
@@ -1070,7 +1106,7 @@ class CannonSpell(Spell):
         self.hill_time = time.time() + self.hill_reloading_time
 
     def attack_func(self, other):
-        other.health -= self.damage
+        other.attacked(self.damage)
 
     def auto_attack(self):
         return self.make_action('attack')
@@ -1557,5 +1593,5 @@ ALL_UNITS = [
     Pekka, BatArmy, BatMob, Wall, WallBreaker,
     Snake, LifeGenerator, LiteGolem, HillBattery, AttackBattery,
     CannonSpell, SoldatFlight, Wizard,  ArcherSpawner,
-    Transferer, MagicCannon, Xbow, Sauron, Inferno,  # Flag
+    Transferer, MagicCannon, Xbow, Sauron, Inferno, ShieldBreaker
 ]

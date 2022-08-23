@@ -2,7 +2,7 @@ import pickle
 import sys
 from functools import partial
 
-from PyQt5.QtWidgets import QLabel,  QWidget, QHBoxLayout, QVBoxLayout, QPushButton, QCheckBox
+from PyQt5.QtWidgets import QLabel,  QWidget, QHBoxLayout, QVBoxLayout, QPushButton, QCheckBox, QMessageBox
 from PyQt5.QtCore import Qt
 
 from constants import RED
@@ -36,7 +36,7 @@ class UnitsSelectorWindow(QWidget):
         for i, unit in enumerate(units_list):
             chk_box = QCheckBox(UNITS[unit.params_name]['name'])
             chk_box.stateChanged.connect(self.update_interface_after_change)
-            self.setStyleSheet("background-color: rgc(%d, %d, %d)" % self.gamer.color)
+            self.setStyleSheet("background-color: rgb(%d, %d, %d);" % self.gamer.color)
             self.check_boxes.append(chk_box)
             self.vboxes_for_units[i * len(self.vboxes_for_units) // len(units_list)].addWidget(chk_box)
 
@@ -96,22 +96,33 @@ class UnitsSelectorWindow(QWidget):
 
     def on_load_btn_click(self, number):
         num = str(number)
+        units_name = [i.params_name for i in self.units_list]
+        for i in self.check_boxes:
+            i.setCheckState(0)
         try:
             with open('decks/' + self.command_en + num + '.deck', 'rb') as file:
-                for num, x in enumerate(pickle.load(file)):
+                for name in pickle.load(file):
                     try:
-                        self.check_boxes[num].setCheckState(int(x) * 2)
-                    except IndexError:
-                        print(f'Index Error! {num=}, {x=}!')
+                        self.check_boxes[units_name.index(name)].setCheckState(2)
+                    except ValueError:
+                        # print(f'Value Error! {name=}!')
+                        mb = QMessageBox(
+                            QMessageBox.Warning,
+                            "Предупреждение",
+                            f"Не найден воин (заклинание) \"{UNITS[name].get('name', 'Штука')}\"",
+                            QMessageBox.Ok
+                        )
+                        mb.exec()
+
         except FileNotFoundError:
-            for i in self.check_boxes:
-                i.setCheckState(0)
+            pass
 
         self.update_interface_after_change()
 
     def on_save_btn_click(self, number):
+        units_names = [i.params_name for i in self.units_list]
         with open('decks/' + self.command_en + str(number) + '.deck', 'wb') as file:
-            pickle.dump([x.checkState() == 2 for x in self.check_boxes], file)
+            pickle.dump([units_names[i] for i in range(len(self.check_boxes)) if self.check_boxes[i].checkState() == 2], file)
 
     def update_interface_after_change(self):
         if self.check_units_in_deck_count():

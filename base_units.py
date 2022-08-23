@@ -3,7 +3,7 @@ import time
 
 from funcs import primerno_ravno, distance_between
 from unit import UNITS
-from constants import RED, GREEN, HEIGHT, WIDTH, health_font, WHITE
+from constants import RED, GREEN, HEIGHT, WIDTH, health_font, WHITE, GREY
 
 
 class Unit(pygame.sprite.Sprite):
@@ -28,6 +28,8 @@ class Unit(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(center=coords[:2])
         self.command = command
         self.attack_radius = u.get('attack_radius', 0)
+        self.shield = u.get('shield', 0)
+        self.shield_damage = u.get('shield_damage', None)
         self.target_coords = self.rect
         self.sped = 0
         self.vampirism = u.get('vampirism', 0)
@@ -130,7 +132,7 @@ class Unit(pygame.sprite.Sprite):
                     self.attack(x, False)
             self.splash_radius = s
 
-        other.health -= self.damage
+        other.attacked(self.damage, self.shield_damage)
         self.health += self.vampirism * abs(self.damage)
         if self.health > self.param['health']:
             self.health = self.param['health']
@@ -144,6 +146,14 @@ class Unit(pygame.sprite.Sprite):
             other.stunned = time.time() + self.stun
         #   "SMT -attack-> SMT"
         # print(self.__class__.__name__+' -attack-> '+other.__class__.__name__)
+
+    def attacked(self, damage, shield_damage=None):
+        if shield_damage is None:
+            shield_damage = damage
+        if self.shield > 0:
+            self.shield -= shield_damage
+        else:
+            self.health -= damage
 
     def update(self):
         self.update_()
@@ -202,10 +212,10 @@ class Unit(pygame.sprite.Sprite):
 
     def update_(self):
         text = health_font.render(
-            str(round(self.health if self.health >= 0 else 0)),
+            str(round((self.health if self.health >= 0 else 0) if self.shield <= 0 else self.shield)),
             1,
             WHITE,
-            self.command
+            self.command if self.shield <= 0 else GREY
         )
         text_rect = text.get_rect(center=[self.rect.centerx, self.rect.top - 8])
         self.screen.blit(text, text_rect)
