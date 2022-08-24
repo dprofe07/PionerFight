@@ -21,6 +21,7 @@ class UnitsSelectorWindow(QWidget):
         self.command_en = self.gamer.en_name
 
         self.setWindowTitle(f'Выбор воинов для {self.command_ru}')
+        self.setStyleSheet("background-color: rgb(%d, %d, %d);" % self.gamer.color)
 
         self.vbox = QVBoxLayout()
         self.setLayout(self.vbox)
@@ -36,7 +37,6 @@ class UnitsSelectorWindow(QWidget):
         for i, unit in enumerate(units_list):
             chk_box = QCheckBox(UNITS[unit.params_name]['name'])
             chk_box.stateChanged.connect(self.update_interface_after_change)
-            self.setStyleSheet("background-color: rgb(%d, %d, %d);" % self.gamer.color)
             self.check_boxes.append(chk_box)
             self.vboxes_for_units[i * len(self.vboxes_for_units) // len(units_list)].addWidget(chk_box)
 
