@@ -39,6 +39,7 @@ UNITS = {
         'reloading_time': 0.8,
         'image': {RED: 'images/red_castle.png', GREEN: 'images/green_castle.png'},
         'attack_radius': 200,
+        'miss_chance': 1,
     },
     'xbow': {
         'name': 'Арбалет',

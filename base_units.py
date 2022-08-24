@@ -1,9 +1,44 @@
+import random
+
 import pygame
 import time
 
 from funcs import primerno_ravno, distance_between
 from unit import UNITS
 from constants import RED, GREEN, HEIGHT, WIDTH, health_font, WHITE, GREY
+
+
+class DamageText(pygame.sprite.Sprite):
+    font = pygame.font.Font(None, 15)
+
+    def __init__(self, text, unit):
+        pygame.sprite.Sprite.__init__(self)
+        self.screen = unit.screen
+        self.color = RED if unit.command == GREEN else GREEN
+        self.unit = unit
+
+        self.start_time = time.time()
+        self.display_time = 1
+        self.iter_count = 0
+        self.speed = 2
+
+        self.image = DamageText.font.render(
+            text,
+            True,
+            self.color
+        )
+        self.rect = self.image.get_rect(center=[unit.rect.left, unit.rect.top])
+
+    def update(self):
+        if self.start_time + self.display_time <= time.time():
+            self.unit.damage_texts.remove(self)
+
+        self.iter_count += 1
+        self.rect.center = self.unit.rect.topleft
+        self.rect.centery -= self.speed * self.iter_count
+
+    def draw(self, screen):
+        screen.blit(self.image, self.rect)
 
 
 class Unit(pygame.sprite.Sprite):
@@ -62,6 +97,14 @@ class Unit(pygame.sprite.Sprite):
             self.time_go = time.time()
         self.need_update_properties = True
 
+        self.miss_chance = u.get('miss_chance', 0)
+        self.miss_list_length = 1
+        self.miss_count = 1
+        while self.miss_chance % 1 != 0:
+            self.miss_count += 1
+            self.miss_chance *= 10
+        self.miss_count = self.miss_chance
+        self.damage_texts = []
         # aura
         self.aura = u.get('aura', False)
         self.aura_radius = u.get('aura_radius', 0)
@@ -97,11 +140,25 @@ class Unit(pygame.sprite.Sprite):
     def on_death(self):
         pass
 
+    def missed(self):
+        lst = [i < self.miss_count for i in range(self.miss_list_length)]
+        return random.choice(lst)
+
+    def show_damage_message(self, text):
+        dmg = DamageText(text, self)
+        self.damage_texts.append(dmg)
+
     def attack(self, other, need_update_attack_time=True):
         if 'Flag' in type(other).__name__:
             self.ignore_flags.append(other)
             return
         if self.attack_time > time.time():
+            return
+
+        if self.missed():
+            other.show_damage_message('Промах')
+            if need_update_attack_time:
+                self.attack_time = time.time() + self.reloading_time
             return
 
         if self.splash_radius != 0:
@@ -150,10 +207,14 @@ class Unit(pygame.sprite.Sprite):
     def attacked(self, damage, shield_damage=None):
         if shield_damage is None:
             shield_damage = damage
+
         if self.shield > 0:
             self.shield -= shield_damage
+            dmg = shield_damage
         else:
             self.health -= damage
+            dmg = damage
+        self.show_damage_message(f'-{dmg}')
 
     def update(self):
         self.update_()
@@ -219,6 +280,12 @@ class Unit(pygame.sprite.Sprite):
         )
         text_rect = text.get_rect(center=[self.rect.centerx, self.rect.top - 8])
         self.screen.blit(text, text_rect)
+
+        for dmg in self.damage_texts:
+            dmg.update()
+            dmg.draw(self.screen)
+
+
 
     def auto_go(self):
         targets = [
