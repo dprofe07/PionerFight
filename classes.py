@@ -1199,37 +1199,23 @@ class HealthByTime(Building):
         self.minus = 1 + time.time()
         self.set_health(self.param['health'], True)
 
+    def attacked(self, damage, shield_damage=None):
+        if shield_damage is None:
+            shield_damage = damage
+
+        if self.shield > 0:
+            self.shield -= shield_damage
+            self.show_damage_message(f'-{shield_damage}')
+        else:
+            self.show_damage_message(f'Неуязвимость')
+
     def update(self):
         if super().update():
             if self.minus <= time.time():
                 self.minus = time.time() + 1
-                self.set_health(self.health - 1, True)
+                self.health -= 1
             return True
         return False
-
-    @property
-    def health(self):
-        return self.__health
-
-    @health.setter
-    def health(self, v):
-        self.set_health(v)
-
-    def set_health(self, v, a=False):
-        if a:
-            # noinspection PyAttributeOutsideInit
-            self.__health = v
-
-
-class Flag(HealthByTime):
-    params_name = 'flag'
-
-    def update(self):
-        if super().update():
-            for i in self.group:
-                if i.command == self.command:
-                    i.flag = self
-                    i.goto_flag = True
 
 
 class LifeGenerator(HealthByTime):
@@ -1247,7 +1233,7 @@ class LifeGenerator(HealthByTime):
         self.hill_radius = self.param['hill_radius']
         self.effect_time = self.param['health'] + time.time()
         self.hill_time = 0
-        self.set_health(self.param['health'], True)
+        self.health -= self.param['health']
 
     def update(self):
         if super().update():
@@ -1428,7 +1414,7 @@ class Inferno(Building):
         variants = []
         for x in self.group:
             if (
-                    (self.correct_flag(x) or x.command == self.attack_command) and
+                    x.command == self.attack_command and
                     isinstance(x, eval(self.attack_only)) and
                     not isinstance(x, eval(self.dont_attack))
             ):

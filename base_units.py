@@ -88,9 +88,6 @@ class Unit(pygame.sprite.Sprite):
         self.stun = u.get('stun', 0)
         self.stunned = False
         self.attack_time = time.time() + u.get('first_reload', self.reloading_time)
-        self.flag = None
-        self.goto_flag = False
-        self.ignore_flags = []
         self.die_on_attack = u.get('die_on_attack', False)
         self.run_effect = u.get('run_effect', False)
         if self.run_effect:
@@ -101,7 +98,7 @@ class Unit(pygame.sprite.Sprite):
         self.miss_list_length = 1
         self.miss_count = 1
         while self.miss_chance % 1 != 0:
-            self.miss_count += 1
+            self.miss_list_length *= 10
             self.miss_chance *= 10
         self.miss_count = self.miss_chance
         self.damage_texts = []
@@ -113,9 +110,6 @@ class Unit(pygame.sprite.Sprite):
         self.aura_time = time.time() + u.get('first_reload', self.aura_reloading_time)
 
         group.add(self)
-
-    def correct_flag(self, flag):
-        return 'Flag' in type(flag).__name__ and flag not in self.ignore_flags
 
     @property
     def param(self):
@@ -149,9 +143,6 @@ class Unit(pygame.sprite.Sprite):
         self.damage_texts.append(dmg)
 
     def attack(self, other, need_update_attack_time=True):
-        if 'Flag' in type(other).__name__:
-            self.ignore_flags.append(other)
-            return
         if self.attack_time > time.time():
             return
 
@@ -321,7 +312,7 @@ class Unit(pygame.sprite.Sprite):
         ]
         for x in self.group:
             if (
-                    (self.correct_flag(x) or x.command == self.attack_command) and
+                    x.command == self.attack_command and
                     pygame.Rect(targets).colliderect(x) and
                     isinstance(x, eval(self.attack_only)) and
                     not isinstance(x, eval(self.dont_attack))
@@ -356,26 +347,13 @@ class Unit(pygame.sprite.Sprite):
             best = None
             for x in self.group:
                 if (
-                        (self.correct_flag(x) or x.command == self.attack_command) and
+                        x.command == self.attack_command and
                         isinstance(x, eval(self.attack_only)) and
                         not isinstance(x, eval(self.dont_attack))
                 ):
-                    if (
-                            type(x).__name__ == 'Flag' and
-                            (
-                                    type(best).__name__ != 'Flag' or
-                                    best is None or
-                                    distance_between(self, best) > distance_between(self, x)
-                            )
-                    ):
-                        best = x
-
-                    elif (
-                            not x.died and
-                            (
-                                    best is None or
-                                    distance_between(self, best) > distance_between(self, x)
-                            )
+                    if not x.died and (
+                            best is None or
+                            distance_between(self, best) > distance_between(self, x)
                     ):
                         best = x
             if best is not None:

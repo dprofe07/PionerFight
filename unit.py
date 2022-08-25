@@ -39,7 +39,6 @@ UNITS = {
         'reloading_time': 0.8,
         'image': {RED: 'images/red_castle.png', GREEN: 'images/green_castle.png'},
         'attack_radius': 200,
-        'miss_chance': 1,
     },
     'xbow': {
         'name': 'Арбалет',
@@ -64,6 +63,7 @@ UNITS = {
         'attack_radius': 100,
         'points': 100,
         'wait': 0.5,
+        'miss_chance': 0.3,
         'roles': ['attack', 'deaf'],
     },
     'gigant': {
