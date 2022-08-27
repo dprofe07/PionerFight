@@ -225,6 +225,17 @@ UNITS = {
         'miss_chance': 0.1,
         'roles': ['deaf'],
     },
+    'column': {
+        'name': 'Столб',
+        'damage': 0,
+        'health': 1000,
+        'reloading_time': 1000,
+        'image': {RED: 'images/red_column.png', GREEN: 'images/green_column.png'},
+        'attack_radius': 0,
+        'points': 500,
+        'wait': 0.5,
+        'roles': 'deaf'
+    },
 
     'sparky': {
         'name': 'Электро',

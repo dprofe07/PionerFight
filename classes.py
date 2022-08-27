@@ -1289,6 +1289,10 @@ class LifeGenerator(HealthByTime):
                 self.hill_time = time.time() + 1
 
 
+class Column(Building):
+    params_name = 'column'
+
+
 class Xbow(Building):
     params_name = 'xbow'
 
