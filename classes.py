@@ -474,6 +474,28 @@ class Army(Unit):
         return getattr(self.last_obj, name)
 
 
+class ArmyGolem(Unit):
+    params_name = 'army_golem'
+
+    def __init__(self, screen, command, coords, group, sp_reversed):
+        s = None
+        for x in range(-self.param['number'] // 2, self.param['number'] // 2):
+            c = list(coords)
+            c[1] += x * 10
+            s = Golem(
+                screen,
+                command,
+                c,
+                group,
+                sp_reversed
+            )
+
+        self.last_obj = s
+
+    def __getattr__(self, name):
+        return getattr(self.last_obj, name)
+
+
 # noinspection PyMissingConstructor
 class EliteArmy(Unit):
     params_name = 'elite_army'
@@ -1197,7 +1219,7 @@ class HealthByTime(Building):
         )
         self.effect_time = self.param['health'] + time.time()
         self.minus = 1 + time.time()
-        self.set_health(self.param['health'], True)
+        self.health = self.param['health']
 
     def attacked(self, damage, shield_damage=None):
         if shield_damage is None:
@@ -1397,13 +1419,20 @@ class Inferno(Building):
         self.fog_time = 0
         self.fog_image = pygame.image.load(self.param['fog_image'])
         self.fog_rect = [0, 0]
+        self.kill_reloading_time = self.param['kill_reloading_time']
+        self.damage_increment = self.param['damage_increment']
 
     def attack(self, other, need_update_attack_time=True):
-        if self.attack_time < time.time():
-            rect = other.rect
-            self.fog_rect = self.fog_image.get_rect(center=rect.center)
-            self.fog_time = time.time() + self.param['fog_display_time']
         super().attack(other, need_update_attack_time)
+
+        if other.died:
+            self.attack_time = time.time() + self.kill_reloading_time
+            self.damage = self.damage_
+            self.fog_rect = self.fog_image.get_rect(center=other.rect.center)
+            self.fog_time = time.time() + self.param['fog_display_time']
+        else:
+            self.damage += self.damage_increment
+
 
     def update(self):
         super().update()
@@ -1411,6 +1440,7 @@ class Inferno(Building):
             self.screen.blit(self.fog_image, self.fog_rect)
 
     def auto_attack(self):
+        return super().auto_attack()
         variants = []
         for x in self.group:
             if (
@@ -1574,10 +1604,13 @@ ALL_UNITS = [
     Soldat, Archer, Gigant, Hill, DoubleDamage, Meteor,
     Rocket, Cannon, Sparky, SoldatSpawner, Collector, Lightning,
     Golem, Digger, Teleport, Spirit, Cavalry, Push, Fix, Army,
-    Cemetery, Hiller, Musician, Freeze, CannonWheels, Elite,
+    Cemetery, Hiller, Freeze, CannonWheels, Elite,
     EliteArmy, Taran, Witch, ArmyArcher, Car, Vampire,
     Pekka, BatArmy, BatMob, Wall, WallBreaker,
     Snake, LifeGenerator, LiteGolem, HillBattery, AttackBattery,
     CannonSpell, SoldatFlight, Wizard,  ArcherSpawner,
     Transferer, MagicCannon, Xbow, Sauron, Inferno, ShieldBreaker
+]
+REMOVED_FROM_ALL_UNITS = [
+    Musician
 ]

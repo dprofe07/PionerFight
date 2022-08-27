@@ -50,6 +50,7 @@ UNITS = {
         'attack_radius': 350,
         'wait': 2,
         'max_count': 2,
+        'miss_chance': 0.2,
         'roles': ['deaf']
     },
     'archer': {
@@ -94,15 +95,16 @@ UNITS = {
         'roles': ['attack'],
     },
     'cannon_wheels': {
-        'name': 'Пушка GO',
-        'damage': 15,
+        'name': 'Пушка на колёсах',
+        'damage': 100,
         'health': 400,
-        'reloading_time': 2,
+        'reloading_time': 1.5,
         'image': {RED: 'images/red_cannon_wheels.png', GREEN: 'images/green_cannon_wheels.png'},
         'speed': 2,
         'attack_radius': 75,
         'points': 700,
         'wait': 0.5,
+        'miss_chance': 0.1,
         'roles': ['attack'],
     },
     'hill': {
@@ -174,33 +176,41 @@ UNITS = {
     },
     'cannon': {
         'name': 'Пушка',
-        'damage': 50,
+        'damage': 150,
         'health': 500,
         'reloading_time': 1.5,
         'image': {RED: 'images/red_cannon.png', GREEN: 'images/green_cannon.png'},
         'attack_radius': 100,
         'points': 500,
         'wait': 0.5,
+        'miss_chance': 0.05,
         'roles': ['deaf'],
     },
     'inferno': {
         'name': 'Инферно',
-        'damage': 1_000_000_000,
+        'damage': 1,
+        'damage_increment': 1,
         'health': 700,
-        'reloading_time': 10,
+        'reloading_time': 0,
+        'kill_reloading_time': 4,
         'image': {RED: 'images/red_inferno.png', GREEN: 'images/green_inferno.png'},
         'fog_image': 'images/fog.png',
         'fog_display_time': 1,
-        'attack_radius': 1_000_000_000,
+        'attack_radius': 300,
         'points': 1600,
         'wait': 0.5,
-        'max_count': 1,
         'do_not_attack': 'Building',
         'aura': True,
         'aura_rt': 0.5,
         'aura_damage': 40,
         'aura_radius': 80,
         'roles': ['deaf'],
+    },
+    'army_golem': {
+        'name': 'Орда големов',
+        'number': 10,
+        'points': 1,
+        'wait': 0,
     },
     'magic_cannon': {
         'name': 'Магическая пушка',
@@ -210,8 +220,9 @@ UNITS = {
         'image': {RED: 'images/red_magic_cannon.png', GREEN: 'images/green_magic_cannon.png'},
         'attack_radius': 100,
         'points': 1000,
-        'splash_radius': 30,
+        'splash_radius': 50,
         'wait': 2,
+        'miss_chance': 0.1,
         'roles': ['deaf'],
     },
 
@@ -267,7 +278,7 @@ UNITS = {
     },
     'collector': {  # ANC_COLLECTOR
         'name': 'Сборщик',
-        'health': 500,
+        'health': 400,
         'reloading_time': 7,
         'image': {RED: 'images/red_collector.png', GREEN: 'images/green_collector.png'},
         'image_full': {RED: 'images/red_full_collector.png', GREEN: 'images/green_full_collector.png'},
@@ -277,6 +288,7 @@ UNITS = {
         'wait': 3,
         'roles': ['support'],
     },
+
     'lightning': {
         'name': 'Молния',
         'damage': 200,
@@ -389,6 +401,7 @@ UNITS = {
         'image': {RED: 'images/red_hiller.png', GREEN: 'images/green_hiller.png'},
         'points': 600,
         'wait': 0.5,
+        'miss_chance': 0.1,
         'roles': ['attack', 'support', 'deaf'],
     },
     'musician': {  # ANC_MUSICIAN
@@ -403,6 +416,7 @@ UNITS = {
         'points': 500,
         'speed_radius': 100,
         'wait': 0.5,
+        'miss_chance': 0.1,
         'roles': ['support'],
     },
     'freeze': {
@@ -456,7 +470,7 @@ UNITS = {
         'name': 'Ведьма',
         'points': 1000,
         'health': 400,
-        'damage': 20,
+        'damage': 40,
         'attack_radius': 100,
         'number': 5,
         'reloading_time': 1,
@@ -465,6 +479,7 @@ UNITS = {
         'image': {RED: 'images/red_witch.png', GREEN: 'images/green_witch.png'},
         'wait': 3,
         'splash_radius': 50,
+        'miss_chance': 0.1,
         'on_death_number': 2,
         'roles': ['support', 'deaf'],
     },
@@ -482,6 +497,7 @@ UNITS = {
         'wait': 3,
         'splash_radius': 50,
         'on_death_number': 1,
+        'miss_chance': 0.1,
         'roles': ['support', 'deaf'],
     },
     'army_archer': {
@@ -516,11 +532,12 @@ UNITS = {
         'points': 1000,
         'image': {RED: 'images/red_vampire.png', GREEN: 'images/green_vampire.png'},
         'health': 300,
-        'damage': 15,
+        'damage': 25,
         'reloading_time': 1.5,
         'attack_radius': 75,
         'speed': 3,
-        'vampirism': 1 + 7 / 100,
+        'vampirism': 1.07,
+        'miss_chance': 0.1,
         'vampire_radius': 100,
         'wait': 0.5,
         'roles': ['attack', 'support'],
@@ -536,6 +553,7 @@ UNITS = {
         'splash_radius': 50,
         'wait': 0.5,
         'reloading_time': 2,
+        'miss_chance': 0.1,
         'roles': ['support', 'deaf'],
     },
     'pekka': {
@@ -646,18 +664,6 @@ UNITS = {
         'wait': 0.5,
         'roles': ['support'],
     },
-    'flag': {
-        'name': 'Флаг',
-        'damage': 0,
-        'health': 10,
-        'points': 500,
-        'image': {RED: 'images/red_flag.png', GREEN: 'images/green_flag.png'},
-        'reloading_time': 11,
-        'attack_radius': 0,
-        'reversed': True,
-        'wait': 10,
-        'roles': ['support'],
-    },
     'lite_golem': {
         'name': 'Мини-голем',
         'damage': 50,
@@ -720,7 +726,6 @@ UNITS = {
         'hill_reloading_time': 1,
         'roles': ['deaf', 'attack'],
     },
-
 }
 
 HELP = {
@@ -831,8 +836,6 @@ HELP = {
                   f' S ꞓ [{-UNITS["transferer"]["s"]}, {-UNITS["transferer"]["s"] // 2}])',
     'wizard': f'Маг({UNITS["wizard"]["points"]} очков): Средний воин дальнего боя.'
               f' Имеет сплеш-урон.',
-    'flag': f'Флаг({UNITS["flag"]["points"]} очков): Здание, заставляющее всех союзных'
-            f' воинов перемещатся к нему',
     'xbow': f'Арбалет({UNITS["xbow"]["points"]} очков): Здание. Имеет очень большой '
             f'({UNITS["xbow"]["attack_radius"]}) радиус атаки.',
 }

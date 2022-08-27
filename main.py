@@ -61,8 +61,8 @@ q_app.exec_()
 ALL_UNITS = modes_selector.all_units
 use_random_unit = modes_selector.use_random_unit
 
-red_gamer.deck = modes_selector.result_deck[:]
-green_gamer.deck = modes_selector.result_deck[:]
+red_gamer.deck = modes_selector.get_result_deck()
+green_gamer.deck = modes_selector.get_result_deck()
 
 red_login = get_user_login(q_app, 'красного')
 red_gamer.load_info(red_login)

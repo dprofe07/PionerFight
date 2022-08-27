@@ -20,7 +20,7 @@ class DamageText(pygame.sprite.Sprite):
         self.start_time = time.time()
         self.display_time = 1
         self.iter_count = 0
-        self.speed = 2
+        self.speed = 5
 
         self.image = DamageText.font.render(
             text,
@@ -74,6 +74,7 @@ class Unit(pygame.sprite.Sprite):
         self.attack_only = u.get('attack_only', 'Unit')
         self.attack_command = u.get('attack_command', 'other')
         self.dont_attack = u.get('do_not_attack', 'Spell')
+        self.on_death_worked = False
         self.max_count = u.get('max_count', 51)
         if self.attack_command == 'other':
             if self.command == GREEN:
@@ -127,8 +128,9 @@ class Unit(pygame.sprite.Sprite):
 
     @property
     def died(self):
-        if self.health <= 0:
+        if self.health <= 0 and not self.on_death_worked:
             self.on_death()
+            self.on_death_worked = True
         return self.health <= 0
 
     def on_death(self):
@@ -205,7 +207,8 @@ class Unit(pygame.sprite.Sprite):
         else:
             self.health -= damage
             dmg = damage
-        self.show_damage_message(f'-{dmg}')
+        if dmg > 0:
+            self.show_damage_message(f'-{dmg}')
 
     def update(self):
         self.update_()
